@@ -13,6 +13,7 @@ import lombok.Setter;
 public class User {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -21,13 +22,17 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Gender gender; // FEMALE, MALE
 
+    @Column(nullable = false)
     private int age;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserType type; // EMPLOYEE, HR_MANAGER, SYS_ADMIN
 
