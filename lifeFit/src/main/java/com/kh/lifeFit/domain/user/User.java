@@ -1,5 +1,6 @@
-package com.kh.lifeFit.domain;
+package com.kh.lifeFit.domain.user;
 
+import com.kh.lifeFit.domain.common.Gender;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

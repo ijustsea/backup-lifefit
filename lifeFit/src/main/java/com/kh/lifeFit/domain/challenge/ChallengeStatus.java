@@ -1,4 +1,4 @@
-package com.kh.lifeFit.domain;
+package com.kh.lifeFit.domain.challenge;
 
 public enum ChallengeStatus {
     ONGOING, FULL, ENDED // 진행중, 선착순 마감, 종료

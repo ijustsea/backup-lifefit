@@ -1,5 +1,6 @@
-package com.kh.lifeFit.domain;
+package com.kh.lifeFit.domain.groupBuy;
 
+import com.kh.lifeFit.domain.supply.Supply;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

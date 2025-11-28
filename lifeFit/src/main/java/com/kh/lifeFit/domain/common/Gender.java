@@ -1,4 +1,4 @@
-package com.kh.lifeFit.domain;
+package com.kh.lifeFit.domain.common;
 
 public enum Gender {
     FEMALE, MALE

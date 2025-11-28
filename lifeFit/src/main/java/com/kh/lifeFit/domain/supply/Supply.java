@@ -1,7 +1,6 @@
-package com.kh.lifeFit.domain;
+package com.kh.lifeFit.domain.supply;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
