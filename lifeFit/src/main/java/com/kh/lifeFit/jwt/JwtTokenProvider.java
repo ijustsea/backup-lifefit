@@ -24,11 +24,12 @@ public class JwtTokenProvider {
     }
 
     //Acess Token generate
-    public String createAccessToken(String email) {
+    public String createAccessToken(Long userId, String email) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenExpireMs);
         return Jwts.builder()
                 .setSubject(email)
+                .claim("userId", userId)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -56,6 +57,17 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(token).getBody();
         return claims.getSubject();
+    }
+
+    //토큰에서 userId 추출
+    public Long getUserId(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get("userId", Long.class);
     }
 
 
