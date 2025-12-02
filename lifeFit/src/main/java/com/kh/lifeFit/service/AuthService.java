@@ -34,10 +34,7 @@ public class AuthService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        System.out.println("⭐ matches 검사 = "
-                + new BCryptPasswordEncoder(BCryptPasswordEncoder.BCryptVersion.$2A)
-                .matches("password", user.getPassword()));
-        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
 
         return LoginResponse.builder()
                 .userId(user.getId())
