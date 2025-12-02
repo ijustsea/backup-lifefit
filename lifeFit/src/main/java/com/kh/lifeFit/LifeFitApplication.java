@@ -10,7 +10,6 @@ public class LifeFitApplication {
 	public static void main(String[] args) {
 
 		SpringApplication.run(LifeFitApplication.class, args);
-        System.out.println("text");
 	}
 
 }
