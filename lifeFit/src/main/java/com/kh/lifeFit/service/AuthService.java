@@ -34,11 +34,17 @@ public class AuthService {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
+        // ⭐ UserType → ROLE_ 변환
+        String role = "ROLE_" + user.getType().name();
+
+        // ⭐ JWT 생성 (role 포함!)
+        String accessToken =
+                jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), role);
 
         return LoginResponse.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
+                .role(role)               // ★ 프론트가 바로 사용!
                 .accessToken(accessToken)
                 .message("로그인성공")
                 .build();

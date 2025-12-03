@@ -29,6 +29,12 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/login").permitAll()
+
+                /* 권한(ROLE) 기반 URL 접근 제어 */
+                .requestMatchers("/admin/**").hasRole("SYS_ADMIN")
+                .requestMatchers("/hr/**").hasRole("HR_MANAGER")
+                .requestMatchers("/employee/**").hasRole("EMPLOYEE")
+
                 .anyRequest().authenticated()
         );
 
