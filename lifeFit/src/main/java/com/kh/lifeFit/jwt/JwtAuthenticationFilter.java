@@ -28,31 +28,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        String requestURI = request.getRequestURI();
+
+        // 1️⃣ 로그인/회원가입 등 인증이 필요 없는 요청은 JWT 필터 건너뛰기
+        if (requestURI.startsWith("/api/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 2️⃣ 나머지 요청은 기존 JWT 검증 로직 수행
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
-           String token = header.substring(7);
+            String token = header.substring(7);
 
-           if(jwtTokenProvider.validateToken(token)) {
-               String email = jwtTokenProvider.getEmail(token);
-               UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            if (jwtTokenProvider.validateToken(token)) {
+                String email = jwtTokenProvider.getEmail(token);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-               UsernamePasswordAuthenticationToken auth =
-                       new UsernamePasswordAuthenticationToken(
-                               userDetails,
-                               null,
-                               userDetails.getAuthorities()
-                       );
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-               auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-               SecurityContextHolder.getContext().setAuthentication(auth);
-           }
-
-
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
         }
 
         filterChain.doFilter(request, response);
-
-
     }
 }
