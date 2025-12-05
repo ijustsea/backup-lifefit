@@ -1,4 +1,4 @@
-package com.kh.lifeFit.repository;
+package com.kh.lifeFit.repository.userRepository;
 
 import com.kh.lifeFit.domain.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;

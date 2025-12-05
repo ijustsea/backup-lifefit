@@ -1,7 +1,7 @@
 package com.kh.lifeFit.jwt;
 
 import com.kh.lifeFit.domain.user.User;
-import com.kh.lifeFit.repository.UserRepository;
+import com.kh.lifeFit.repository.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

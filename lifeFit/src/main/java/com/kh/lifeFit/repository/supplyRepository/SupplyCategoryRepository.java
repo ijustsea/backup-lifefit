@@ -1,4 +1,4 @@
-package com.kh.lifeFit.repository;
+package com.kh.lifeFit.repository.supplyRepository;
 
 import com.kh.lifeFit.domain.supply.SupplyCategory;
 import org.springframework.data.jpa.repository.JpaRepository;

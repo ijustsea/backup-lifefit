@@ -4,13 +4,10 @@ import com.kh.lifeFit.domain.user.User;
 import com.kh.lifeFit.dto.auth.LoginRequest;
 import com.kh.lifeFit.dto.auth.LoginResponse;
 import com.kh.lifeFit.jwt.JwtTokenProvider;
-import com.kh.lifeFit.repository.UserRepository;
+import com.kh.lifeFit.repository.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Arrays;
 
 @Service
 @RequiredArgsConstructor

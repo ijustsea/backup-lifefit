@@ -2,7 +2,7 @@ package com.kh.lifeFit.controller;
 
 
 import com.kh.lifeFit.dto.supply.SupplyDto;
-import com.kh.lifeFit.service.SupplyService;
+import com.kh.lifeFit.service.supplyService.SupplyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,12 +1,12 @@
-package com.kh.lifeFit.service;
+package com.kh.lifeFit.service.supplyService;
 
 import com.kh.lifeFit.domain.supply.*;
 
 
 import com.kh.lifeFit.dto.supply.CategoryDto;
 import com.kh.lifeFit.dto.supply.SupplyDto;
-import com.kh.lifeFit.repository.SupplyCategoryRepository;
-import com.kh.lifeFit.repository.SupplyRepository;
+import com.kh.lifeFit.repository.supplyRepository.SupplyCategoryRepository;
+import com.kh.lifeFit.repository.supplyRepository.SupplyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
