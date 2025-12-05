@@ -45,9 +45,46 @@ public class SupplyService {
                     supply.getStock(),
                     supply.getBrand(),
                     supply.getTablets(),
+                    supply.getDetail(),
                     supply.getImg(),
+                    supply.getExp(),
                     categories
             );
         }).toList();
     }
+
+    // 단일 상품 조회 (상세페이지용)
+    public SupplyDto getSupplyDetail(Long id) {
+
+        // 1) Supply 엔티티 조회
+        Supply supply = supplyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다. id=" + id));
+
+        // 2) 해당 상품의 카테고리 목록 조회
+        List<SupplyCategory> categoryList =
+                supplyCategoryRepository.findBySupplyId(supply.getId());
+
+        // 3) CategoryDto 변환
+        List<CategoryDto> categories = categoryList.stream()
+                .map(sc -> new CategoryDto(
+                        sc.getCategory().getId(),
+                        sc.getCategory().getName()
+                ))
+                .toList();
+
+        // 4) SupplyDto로 반환
+        return new SupplyDto(
+                supply.getId(),
+                supply.getName(),
+                supply.getPrice(),
+                supply.getStock(),
+                supply.getBrand(),
+                supply.getTablets(),
+                supply.getDetail(),
+                supply.getImg(),
+                supply.getExp(),
+                categories
+        );
+    }
+
 }

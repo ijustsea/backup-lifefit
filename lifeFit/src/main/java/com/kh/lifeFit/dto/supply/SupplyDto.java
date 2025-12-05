@@ -3,6 +3,7 @@ package com.kh.lifeFit.dto.supply;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -14,7 +15,9 @@ public class SupplyDto {
     private Long stock;
     private String brand;
     private Long tablets;
+    private String detail;
     private String img;
+    private LocalDateTime exp;
     private List<CategoryDto> categories;
 }
 

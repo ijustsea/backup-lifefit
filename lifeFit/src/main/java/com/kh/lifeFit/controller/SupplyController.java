@@ -21,4 +21,9 @@ public class SupplyController {
     public List<SupplyDto> getNormalSupplies() {
         return supplyService.getNormalSupplyList();
     }
+
+    @GetMapping("/{id}")
+    public SupplyDto getSupplyById(@PathVariable Long id) {
+        return supplyService.getSupplyDetail(id);
+    }
 }
