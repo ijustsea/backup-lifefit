@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface SupplyRepository extends JpaRepository<Supply, Long> {
+public interface SupplyRepository
+        extends JpaRepository<Supply, Long>, SupplyRepositoryCustom {  // ⭐ 추가됨
     List<Supply> findByStatus(SupplyStatus status);
 }
