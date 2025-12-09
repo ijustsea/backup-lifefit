@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
 @Getter
 @NoArgsConstructor
@@ -23,6 +25,8 @@ public class GroupBuyInfo {
     private Long limitStock;
     @Column(nullable = false)
     private Long discount;
+    @Column(nullable = false)
+    private LocalDate endDate;
 
     @Version
     @Column(nullable = false)
