@@ -38,7 +38,8 @@ public class HealthData {
 
     private Double bmi;
     private Double bloodSugar;
-    private Double bloodPressure;
+    private Integer systolic; // 수축기
+    private Integer diastolic; // 이완기
 
     @Column(nullable = false)
     private LocalDateTime checkupDate; // 검진일
