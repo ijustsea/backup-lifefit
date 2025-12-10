@@ -38,7 +38,7 @@ public enum ProcessStatus { // HeartRateStatus와 다르게 운영 규칙을 설
 
         // 구체적인 에러 메시지O, 그대로 반환
         if(detailMessage != null && !detailMessage.isBlank()) {
-            return detailMessage;
+            return "[" + this.description + "]" + detailMessage;
         }
 
         // 메시지X, 성공 "-" 하이픈 사용
