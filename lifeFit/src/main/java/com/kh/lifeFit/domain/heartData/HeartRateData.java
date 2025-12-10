@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "heart_rate_data")
-public class HeartRateData {
+public class HeartRateData { // 측정 데이터으로 항상 존재한다.
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "heart_rate_data_id")

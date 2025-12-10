@@ -1,9 +1,10 @@
 package com.kh.lifeFit.domain.heartData;
 
+import com.kh.lifeFit.domain.common.Gender;
 import lombok.Getter;
 
 @Getter
-public enum HeartRateStatus {
+public enum HeartRateStatus { // 상태 정의만 담당한다.
 
     NORMAL("정상", "#28a745"),
     CAUTION("경고", "#ffc107"),
@@ -18,24 +19,32 @@ public enum HeartRateStatus {
         this.colorCode = colorCode;
     }
 
-    //
-    public static HeartRateStatus getHeartRateStatus(int heartRate, int age, String gender) {
+    public boolean isAbnormal(){
+        return this != NORMAL;
+    }
 
-        int minNormal;
-        int maxNormal;
+    // 성별&나이 기반 심박수 상태 판단 메소드
+    public static HeartRateStatus getHeartRateStatus(int heartRate, int age, Gender gender) {
+
+        // enum 필드X, 상태X, 규칙 계산용 값
+        int minNormal; // 싱박수 정상 범위 최소값
+        int maxNormal; // 심박수 정상 범위 최대값
+
+        // if~else구문에 조건판단1회로 줄이기 위해 리팩토링함(가독성 업)
+        boolean isMale = gender == Gender.MALE;
 
         if (age < 30) {
-            minNormal = gender.equals("male") ? 60 : 65;
-            maxNormal = gender.equals("male") ? 100 : 105;
+            minNormal = isMale ? 60 : 65;
+            maxNormal = isMale ? 100 : 105;
         } else if (age >= 30 && age < 50) {
-            minNormal = gender.equals("male") ? 58 : 63;
-            maxNormal = gender.equals("male") ? 98 : 103;
+            minNormal = isMale ? 58 : 63;
+            maxNormal = isMale ? 98 : 103;
         } else if (age >= 50 && age < 65) {
-            minNormal = gender.equals("male") ? 55 : 60;
-            maxNormal = gender.equals("male") ? 95 : 100;
+            minNormal = isMale ? 55 : 60;
+            maxNormal = isMale ? 95 : 100;
         } else {
-            minNormal = gender.equals("male") ? 50 : 55;
-            maxNormal = gender.equals("male") ? 90 : 95;
+            minNormal = isMale ? 50 : 55;
+            maxNormal = isMale ? 90 : 95;
         }
 
         // 상태 판단
