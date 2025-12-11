@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-public class GroupBuyDto {
+public class GroupSupplyDto {
     private Long id;
     private String name;
     private Long price;
