@@ -61,12 +61,14 @@ public class GroupSupplyService {
                 gb.getId(),                 // 공구 ID
                 supply.getName(),           // 제품명
                 supply.getPrice(),          // 가격
-                supply.getStock(),          // 재고
                 supply.getBrand(),          // 브랜드
                 gb.getLimitStock(),         // 공구 제한 재고
                 gb.getDiscount(),           // 공구 할인율
                 gb.getEndDate(),            // 종료 날짜
+                supply.getExp(),            // 유통기한
                 supply.getImg(),            // 이미지
+                supply.getTablets(),        // 알약수
+                supply.getDetail(),         // 상세설명
                 categories                  // 성분 카테고리
         );
     }

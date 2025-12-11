@@ -45,6 +45,7 @@ public class GroupSupplyRepositoryImpl implements GroupSupplyRepositoryCustom {
                         priceIn(cond.getPrice()),
                         statusIn(cond.getGroupStatus())
                 )
+                .orderBy(groupBuyInfo.endDate.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
