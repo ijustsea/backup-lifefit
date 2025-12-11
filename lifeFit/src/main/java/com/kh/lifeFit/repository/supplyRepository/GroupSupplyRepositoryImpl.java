@@ -5,7 +5,7 @@ import com.kh.lifeFit.domain.supply.QSupply;
 import com.kh.lifeFit.domain.supply.QSupplyCategory;
 import com.kh.lifeFit.domain.supply.QCategory;
 import com.kh.lifeFit.domain.supply.SupplyStatus;
-import com.kh.lifeFit.dto.supply.GroupBuySearchCond;
+import com.kh.lifeFit.dto.supply.GroupSupplySearchCond;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import static com.kh.lifeFit.domain.groupBuy.QGroupBuyInfo.groupBuyInfo;
 
 @Repository
 @RequiredArgsConstructor
-public class GroupBuyRepositoryImpl implements GroupBuyRepositoryCustom {
+public class GroupSupplyRepositoryImpl implements GroupSupplyRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
@@ -30,7 +30,7 @@ public class GroupBuyRepositoryImpl implements GroupBuyRepositoryCustom {
     QCategory category = QCategory.category;
 
     @Override
-    public Page<GroupBuyInfo> search(GroupBuySearchCond cond, Pageable pageable) {
+    public Page<GroupBuyInfo> search(GroupSupplySearchCond cond, Pageable pageable) {
 
         List<GroupBuyInfo> content = queryFactory
                 .selectDistinct(groupBuyInfo)
@@ -45,6 +45,7 @@ public class GroupBuyRepositoryImpl implements GroupBuyRepositoryCustom {
                         priceIn(cond.getPrice()),
                         statusIn(cond.getGroupStatus())
                 )
+                .orderBy(groupBuyInfo.endDate.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -57,6 +58,7 @@ public class GroupBuyRepositoryImpl implements GroupBuyRepositoryCustom {
                 .leftJoin(supplyCategory).on(supplyCategory.supply.eq(supply))
                 .leftJoin(supplyCategory.category, category)
                 .where(
+                        supply.status.eq(SupplyStatus.GROUP),
                         brandIn(cond.getBrand()),
                         typeIn(cond.getType()),
                         priceIn(cond.getPrice()),

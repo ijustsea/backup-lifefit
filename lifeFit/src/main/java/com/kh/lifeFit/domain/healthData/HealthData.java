@@ -41,7 +41,6 @@ public class HealthData {
     private Integer systolic; // 수축기
     private Integer diastolic; // 이완기
 
-    @Column(nullable = false)
     private LocalDateTime checkupDate; // 검진일
 
 }

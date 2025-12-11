@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class GroupBuySearchCond {
+public class GroupSupplySearchCond {
     private List<String> brand;
     private List<String> type;
     private List<String> price;
