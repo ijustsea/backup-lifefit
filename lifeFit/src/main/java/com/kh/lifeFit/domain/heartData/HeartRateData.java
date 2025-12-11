@@ -37,9 +37,6 @@ public class HeartRateData { // 측정 데이터으로 항상 존재한다.
     @Column(nullable = false) // 첫 측정이라 비교 대상이 없으면 0으로 저장
     private int variation; // 변화량
 
-    @Column(nullable = false)
-    private Long elapsedTimeSeconds; // 경과 시간
-
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt; // 생성 일시

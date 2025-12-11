@@ -28,10 +28,10 @@ public class HeartRateLog {
     private String userName;
 
     @Column(nullable = false)
-    private int partitionNumber; // 파티션 번호
+    private int partitionNo; // 파티션 번호
 
     @Column(nullable = false)
-    private int processingTimeMs; // 처리 시간
+    private int processingTimeMs; // 처리 소요 시간(ms)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
