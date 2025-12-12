@@ -31,4 +31,9 @@ public class GroupBuyInfo {
     @Version
     @Column(nullable = false)
     private Long version;
+
+    //공동구매 재고 감소 메소드
+    public void decreaseLimitStock() {
+        this.limitStock = this.limitStock - 1;
+    }
 }
