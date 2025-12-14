@@ -31,7 +31,7 @@ public class SupplyRepositoryImpl implements SupplyRepositoryCustom {
         List<Supply> content = queryFactory
                 .selectDistinct(supply)   // 중복 제거
                 .from(supply)
-                .leftJoin(supplyCategory).on(supplyCategory.supply.eq(supply))
+                .leftJoin(supplyCategory).on(supplyCategory.supply.eq(supply)).fetchJoin()
                 .leftJoin(supplyCategory.category, category)
                 .where(
                         supply.status.eq(SupplyStatus.NORMAL),
