@@ -35,7 +35,7 @@ public class GroupSupplyRepositoryImpl implements GroupSupplyRepositoryCustom {
         List<GroupBuyInfo> content = queryFactory
                 .selectDistinct(groupBuyInfo)
                 .from(groupBuyInfo)
-                .join(groupBuyInfo.supply, supply)
+                .join(groupBuyInfo.supply, supply).fetchJoin()
                 .leftJoin(supplyCategory).on(supplyCategory.supply.eq(supply))
                 .leftJoin(supplyCategory.category, category)
                 .where(

@@ -17,7 +17,7 @@ public class GroupBuyInfo {
     @Column(name = "group_buy_info_id")
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "supply_id", unique = true)
     private Supply supply;
 
