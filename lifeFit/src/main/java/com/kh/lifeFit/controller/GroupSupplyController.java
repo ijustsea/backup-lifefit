@@ -2,6 +2,7 @@
 
     import com.kh.lifeFit.dto.supply.GroupSupplyDto;
     import com.kh.lifeFit.dto.supply.GroupSupplySearchCond;
+    import com.kh.lifeFit.service.filterService.GroupSupplyFilterService;
     import com.kh.lifeFit.service.groupSupplyService.GroupSupplyService;
     import lombok.RequiredArgsConstructor;
     import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@
     import org.springframework.web.bind.annotation.*;
 
     import java.util.List;
+    import java.util.Map;
 
     @RestController
     @RequiredArgsConstructor
@@ -17,6 +19,7 @@
     public class GroupSupplyController {
 
         private final GroupSupplyService groupSupplyService;
+        private final GroupSupplyFilterService groupSupplyFilterService;
 
         /** 🔥 공동구매(공구 영양제) 리스트 + 필터 + 페이징 */
         @GetMapping("/groupSupplies")
@@ -29,6 +32,14 @@
         ) {
             GroupSupplySearchCond cond = new GroupSupplySearchCond(brand, type, price, groupStatus);
             return groupSupplyService.searchGroupSupplies(cond, pageable);
+        }
+
+        @GetMapping("/groupSupplies/filters")
+        public Map<String, List<String>> getGroupSupplyFilters() {
+            return Map.of(
+                    "brands", groupSupplyFilterService.getAllGroupBrands(),
+                    "types", groupSupplyFilterService.getAllGroupCategoryNames()
+            );
         }
 
         /** 🔥 상세 조회 */
