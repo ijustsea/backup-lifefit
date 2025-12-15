@@ -26,13 +26,9 @@ public class HeartRateAlert { // 비정상 데이터만 가져오는 이벤트�
     @JoinColumn(name = "heart_rate_data_id", unique = true, nullable = false)
     private HeartRateData heartRateData;
 
-    @Enumerated(EnumType.STRING)
-    private HeartRateStatus status; // 심박수 심각도는 CAUTION, DANGER 만 허용한다.
-
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt; // 생성 일시
-
 
     // 스냅샷 사용
     // 도메인 제약 조건으로 심박수 알림 도메인이 비정상 상태에서만 존재한다고 강제했다.
@@ -44,7 +40,6 @@ public class HeartRateAlert { // 비정상 데이터만 가져오는 이벤트�
         }
         // 값 할당
         this.heartRateData = data;
-        this.status = data.getStatus();
     }
 
 }
