@@ -40,7 +40,6 @@ public class HeartRateAlert { // 비정상 데이터만 가져오는 이벤트�
         }
         // 값 할당
         this.heartRateData = data;
-        this.status = data.getStatus();
     }
 
 }
