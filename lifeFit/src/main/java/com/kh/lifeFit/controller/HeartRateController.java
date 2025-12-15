@@ -22,16 +22,6 @@ public class HeartRateController {
     }
 
     // 심박수 조회
-    @GetMapping("/{userId}")
-    public ResponseEntity<String> testHeartRate(@PathVariable Long userId){
-
-        // 1. 서비스한테 "이 유저의 데이터 다 가져와!" 하고 시킴
-        // (아직 서비스에 이 메서드가 없으니 빨간줄이 뜰 거예요. 곧 만들 겁니다!)
-        // List<HeartDataResponseDto> dataList = heartRateService.getHeartRatesByUser(userId);
-
-        // 2. 가져온 데이터 반환
-        return ResponseEntity.ok("아직 서비스 로직 만들기 전입니다! (userId: " + userId + ")");
-
-    }
+    //@GetMapping
 
 }
