@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -21,7 +21,7 @@ public class Supply {
     @Column(nullable = false)
     private Long price;
 
-    @Column(nullable = false)
+    @Column
     private Long stock;
 
     @Column(nullable = false)
@@ -31,7 +31,7 @@ public class Supply {
     private Long tablets;
 
     @Column(nullable = false)
-    private LocalDateTime exp;
+    private LocalDate exp;
 
     @Column(nullable = false)
     private String detail;

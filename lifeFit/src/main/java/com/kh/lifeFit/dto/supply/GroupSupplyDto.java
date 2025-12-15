@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -20,7 +19,7 @@ public class GroupSupplyDto {
     private Long limitStock;
     private Long discount;
     private LocalDate endDate;
-    private LocalDateTime exp;
+    private LocalDate exp;
     private String img;
 
     private Long tablets;
