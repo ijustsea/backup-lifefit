@@ -38,7 +38,7 @@ public class HealthData {
     private Gender userGender; // FEMALE, MALE
 
     private Double bmi;
-    private Double bloodSugar;
+    private Integer bloodSugar;
     private Integer systolic; // 수축기
     private Integer diastolic; // 이완기
 
