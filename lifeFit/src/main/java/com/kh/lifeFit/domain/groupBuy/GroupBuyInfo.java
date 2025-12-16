@@ -36,4 +36,8 @@ public class GroupBuyInfo {
     public void decreaseLimitStock() {
         this.limitStock = this.limitStock - 1;
     }
+    //공동구매 재고 증가 메소드
+    public void increaseLimitStock() {
+        this.limitStock = this.limitStock + 1;
+    }
 }

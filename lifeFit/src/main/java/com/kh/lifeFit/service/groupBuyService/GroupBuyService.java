@@ -15,6 +15,8 @@
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
 
+    import java.util.Optional;
+
     @Service
     @RequiredArgsConstructor
     public class GroupBuyService {
@@ -28,29 +30,47 @@
                 backoff = @Backoff(delay = 50)
         )
         @Transactional
-        public boolean participate(Long groupBuyId, Long userId) {
+        public GroupBuyStatus participate(Long groupBuyInfoId, Long userId) {
 
             // 1) 공동구매 대상 조회
-            GroupBuyInfo info = groupBuyInfoRepository.findById(groupBuyId)
+            GroupBuyInfo info = groupBuyInfoRepository.findById(groupBuyInfoId)
                     .orElseThrow(() -> new IllegalArgumentException("공동구매 정보를 찾을 수 없습니다."));
 
-            // 2) 재고 부족 시 즉시 false 반환 (재시도 X)
-            if(info.getLimitStock() <= 0) {
-                return false;
+            // 2) 공동구매 참여여부 확인
+            Optional<GroupBuy> optional = groupBuyRepository.findByUserIdAndGroupBuyInfoId(userId, groupBuyInfoId);
+
+            // 3) 최초참여
+            if (optional.isEmpty()){
+                //재고 체크
+                if(info.getLimitStock() <=0){return null;}
+                //회원 정보 유무 체크
+                User user = userRepository.findById(userId)
+                        .orElseThrow(()-> new IllegalArgumentException("회원정보를 찾을수 없습니다."));
+                //공동구매 재고 감소
+                info.decreaseLimitStock();
+                //공공구매 내역 저장
+                groupBuyRepository.save(new GroupBuy(user, info, GroupBuyStatus.BUY));
+                return GroupBuyStatus.BUY;
+            }
+            // 4) 이미 참여존재
+            GroupBuy groupBuy = optional.get();
+
+            if(groupBuy.getStatus() == GroupBuyStatus.BUY){
+                groupBuy.changeStatus(GroupBuyStatus.CANCEL);
+                //재고 복구
+                info.increaseLimitStock();
+                return GroupBuyStatus.CANCEL;
             }
 
-            // 3) 사용자 조회
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다."));
-
-            // 4) 재고 감소 (Dirty Checking -> UPDATE 쿼리 + version 증가)
-            info.decreaseLimitStock();
-
-            // 5) 참여 기록 저장
-            GroupBuy apply = new GroupBuy(user, info, GroupBuyStatus.BUY);
-            groupBuyRepository.save(apply);
-
-            // 성공 처리
-            return true;
+            // 5) 취소 후 재신청
+            if(groupBuy.getStatus() == GroupBuyStatus.CANCEL){
+                //재고 체크
+                if(info.getLimitStock() <=0){return null;}
+                groupBuy.changeStatus(GroupBuyStatus.BUY);
+                info.decreaseLimitStock();
+                return GroupBuyStatus.BUY;
+            }
+            // 이론상 미작동, 컴파일 안정용
+            return null;
         }
     }
