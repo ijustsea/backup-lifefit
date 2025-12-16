@@ -6,7 +6,7 @@
     import com.kh.lifeFit.domain.user.User;
     import com.kh.lifeFit.repository.groupBuyRepository.GroupBuyInfoRepository;
     import com.kh.lifeFit.repository.groupBuyRepository.GroupBuyRepository;
-    import com.kh.lifeFit.repository.userRepository.UserRepository;
+    import jakarta.persistence.EntityManager;
     import jakarta.persistence.OptimisticLockException;
     import lombok.RequiredArgsConstructor;
     import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -22,7 +22,7 @@
     public class GroupBuyService {
         private final GroupBuyRepository groupBuyRepository;
         private final GroupBuyInfoRepository groupBuyInfoRepository;
-        private final UserRepository userRepository;
+        private final EntityManager em;
 
         @Retryable(
                 value = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
@@ -41,36 +41,30 @@
 
             // 3) 최초참여
             if (optional.isEmpty()){
-                //재고 체크
-                if(info.getLimitStock() <=0){return null;}
-                //회원 정보 유무 체크
-                User user = userRepository.findById(userId)
-                        .orElseThrow(()-> new IllegalArgumentException("회원정보를 찾을수 없습니다."));
-                //공동구매 재고 감소
-                info.decreaseLimitStock();
-                //공공구매 내역 저장
-                groupBuyRepository.save(new GroupBuy(user, info, GroupBuyStatus.BUY));
+                info.decreaseLimitStock(); // 재고 검증 + 감소
+
+                User userRef = em.getReference(User.class, userId); // 🔥 프록시
+                groupBuyRepository.save(new GroupBuy(userRef, info, GroupBuyStatus.BUY));
+
                 return GroupBuyStatus.BUY;
             }
             // 4) 이미 참여존재
             GroupBuy groupBuy = optional.get();
 
-            if(groupBuy.getStatus() == GroupBuyStatus.BUY){
-                groupBuy.changeStatus(GroupBuyStatus.CANCEL);
-                //재고 복구
+            // 5) 취소
+            if (groupBuy.isBuy()) {
+                groupBuy.cancel();
                 info.increaseLimitStock();
                 return GroupBuyStatus.CANCEL;
             }
 
-            // 5) 취소 후 재신청
-            if(groupBuy.getStatus() == GroupBuyStatus.CANCEL){
-                //재고 체크
-                if(info.getLimitStock() <=0){return null;}
-                groupBuy.changeStatus(GroupBuyStatus.BUY);
+            // 6) 재신청
+            if (groupBuy.isCancel()) {
                 info.decreaseLimitStock();
+                groupBuy.buy();
                 return GroupBuyStatus.BUY;
             }
-            // 이론상 미작동, 컴파일 안정용
-            return null;
+            // 7) 미작동, 컴파일 안정용
+            throw new IllegalStateException("알 수 없는 상태");
         }
     }

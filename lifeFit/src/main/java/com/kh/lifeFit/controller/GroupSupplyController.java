@@ -2,11 +2,13 @@
 
     import com.kh.lifeFit.dto.supply.GroupSupplyDto;
     import com.kh.lifeFit.dto.supply.GroupSupplySearchCond;
+    import com.kh.lifeFit.jwt.CustomUserDetails;
     import com.kh.lifeFit.service.filterService.GroupSupplyFilterService;
     import com.kh.lifeFit.service.groupSupplyService.GroupSupplyService;
     import lombok.RequiredArgsConstructor;
     import org.springframework.data.domain.Page;
     import org.springframework.data.domain.Pageable;
+    import org.springframework.security.core.annotation.AuthenticationPrincipal;
     import org.springframework.web.bind.annotation.*;
 
     import java.util.List;
@@ -44,7 +46,8 @@
 
         /** 🔥 상세 조회 */
         @GetMapping("/groupSupply/{id}")
-        public GroupSupplyDto getGroupSupplyDetail(@PathVariable Long id) {
-            return groupSupplyService.getGroupSupplyDetail(id);
+        public GroupSupplyDto getGroupSupplyDetail(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails) {
+            Long userId = (userDetails != null) ? userDetails.getUserId() : null;
+            return groupSupplyService.getGroupSupplyDetail(id,  userId);
         }
     }

@@ -45,7 +45,27 @@ public class GroupBuy {
         this.status = status;
     }
 
-    public void changeStatus(GroupBuyStatus status) {
-        this.status = status;
+    // 상태 조회
+    public boolean isBuy() {
+        return status == GroupBuyStatus.BUY;
+    }
+
+    public boolean isCancel() {
+        return status == GroupBuyStatus.CANCEL;
+    }
+
+    // 상태 전이
+    public void buy() {
+        if (status != GroupBuyStatus.CANCEL) {
+            throw new IllegalStateException("구매 불가 상태");
+        }
+        status = GroupBuyStatus.BUY;
+    }
+
+    public void cancel() {
+        if (status != GroupBuyStatus.BUY) {
+            throw new IllegalStateException("취소 불가 상태");
+        }
+        status = GroupBuyStatus.CANCEL;
     }
 }

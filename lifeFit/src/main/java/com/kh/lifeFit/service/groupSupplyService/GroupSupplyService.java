@@ -5,6 +5,7 @@ import com.kh.lifeFit.domain.supply.Supply;
 import com.kh.lifeFit.domain.supply.SupplyCategory;
 import com.kh.lifeFit.dto.supply.GroupSupplyDto;
 import com.kh.lifeFit.dto.supply.GroupSupplySearchCond;
+import com.kh.lifeFit.repository.groupBuyRepository.GroupBuyRepository;
 import com.kh.lifeFit.repository.supplyRepository.GroupSupplyRepository;
 import com.kh.lifeFit.repository.supplyRepository.SupplyCategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GroupSupplyService {
 
+    private final GroupBuyRepository groupBuyRepository;
     private final GroupSupplyRepository groupSupplyRepository;
     private final SupplyCategoryRepository supplyCategoryRepository;
 
@@ -72,7 +74,7 @@ public class GroupSupplyService {
     /* ============================================
         🔥 2) 단일 상세 조회
     ============================================ */
-    public GroupSupplyDto getGroupSupplyDetail(Long id) {
+    public GroupSupplyDto getGroupSupplyDetail(Long id, Long userId) {
 
         GroupBuyInfo gb = groupSupplyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("공동구매 상품을 찾을 수 없습니다. id=" + id));
@@ -86,8 +88,16 @@ public class GroupSupplyService {
         List<String> categories = categoryList.stream()
                 .map(sc -> sc.getCategory().getName())
                 .toList();
-
-        return convertToDto(gb, Map.of(supply.getId(), categories));
+        GroupSupplyDto dto =
+                convertToDto(gb, Map.of(supply.getId(), categories));
+        if (userId != null) {
+            groupBuyRepository
+                    .findByUserIdAndGroupBuyInfoId(userId, gb.getId())
+                    .ifPresent(gbEntity ->
+                            dto.setMyGroupBuyStatus(gbEntity.getStatus())
+                    );
+        }
+        return dto;
     }
 
 
@@ -109,6 +119,7 @@ public class GroupSupplyService {
                 supply.getName(),           // 제품명
                 supply.getPrice(),          // 가격
                 supply.getBrand(),          // 브랜드
+                gb.getTotalStock(),
                 gb.getLimitStock(),         // 공구 제한 재고
                 gb.getDiscount(),           // 공구 할인율
                 gb.getEndDate(),            // 종료 날짜
@@ -116,7 +127,8 @@ public class GroupSupplyService {
                 supply.getImg(),            // 이미지
                 supply.getTablets(),        // 알약수
                 supply.getDetail(),         // 상세설명
-                categories                  // 성분 카테고리
+                categories,                  // 성분 카테고리
+                null
         );
     }
 }
