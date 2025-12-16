@@ -1,4 +1,4 @@
-package com.kh.lifeFit.dto.heartData.MonitoringPage;
+package com.kh.lifeFit.dto.heartData.monitoringPage;
 
 import com.kh.lifeFit.domain.heartData.HeartRateData;
 import com.kh.lifeFit.domain.heartData.HeartRateStatus;

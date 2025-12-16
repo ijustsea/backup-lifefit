@@ -1,4 +1,4 @@
-package com.kh.lifeFit.dto.heartData.AlertPage;
+package com.kh.lifeFit.dto.heartData.alertPage;
 
 public record HeartAlertStatsDto(
         Long totalCount,    // 총 알림 건수
