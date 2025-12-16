@@ -7,6 +7,8 @@ import com.kh.lifeFit.domain.supply.QCategory;
 import com.kh.lifeFit.domain.supply.SupplyStatus;
 import com.kh.lifeFit.dto.supply.GroupSupplySearchCond;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -96,19 +98,34 @@ public class GroupSupplyRepositoryImpl implements GroupSupplyRepositoryCustom {
 
         BooleanExpression condition = null;
 
+        // 🔥 할인 적용가 계산식
+        // price * (100 - discount) / 100
+        NumberExpression<Double> discountedPrice =
+                supply.price.doubleValue()
+                        .multiply(
+                                Expressions.numberTemplate(
+                                        Double.class,
+                                        "(100 - {0}) / 100.0",
+                                        groupBuyInfo.discount
+                                )
+                        );
+
         for (String price : prices) {
             BooleanExpression exp = null;
 
             switch (price) {
                 case "under20":
-                    exp = supply.price.loe(20000);
+                    exp = discountedPrice.loe(20000.0);
                     break;
+
                 case "20to50":
-                    exp = supply.price.between(20000, 50000);
+                    exp = discountedPrice.between(20000.0, 50000.0);
                     break;
+
                 case "over50":
-                    exp = supply.price.goe(50000);
+                    exp = discountedPrice.goe(50000.0);
                     break;
+
                 case "all":
                     return null;
             }
@@ -118,6 +135,7 @@ public class GroupSupplyRepositoryImpl implements GroupSupplyRepositoryCustom {
 
         return condition;
     }
+
 
     /* =======================
         🔥 공동구매 상태 필터

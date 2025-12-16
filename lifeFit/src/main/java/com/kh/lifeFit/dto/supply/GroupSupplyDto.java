@@ -1,5 +1,6 @@
 package com.kh.lifeFit.dto.supply;
 
+import com.kh.lifeFit.domain.groupBuy.GroupBuyStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +17,7 @@ public class GroupSupplyDto {
     private Long price;
     private String brand;
 
+    private Long totalStock;
     private Long limitStock;
     private Long discount;
     private LocalDate endDate;
@@ -26,4 +28,5 @@ public class GroupSupplyDto {
     private String detail;
 
     private List<String> categories;
+    private GroupBuyStatus myGroupBuyStatus;
 }

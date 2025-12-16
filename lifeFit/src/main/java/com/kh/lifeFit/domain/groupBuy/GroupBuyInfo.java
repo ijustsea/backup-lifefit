@@ -2,6 +2,7 @@ package com.kh.lifeFit.domain.groupBuy;
 
 import com.kh.lifeFit.domain.supply.Supply;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -9,7 +10,7 @@ import java.time.LocalDate;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GroupBuyInfo {
 
     @Id
@@ -21,6 +22,11 @@ public class GroupBuyInfo {
     @JoinColumn(name = "supply_id", unique = true)
     private Supply supply;
 
+    /** 총 공동구매 수량 (불변) */
+    @Column(nullable = false)
+    private Long totalStock;
+
+    /** 남은 수량 (변함) */
     @Column(nullable = false)
     private Long limitStock;
     @Column(nullable = false)
@@ -32,12 +38,36 @@ public class GroupBuyInfo {
     @Column(nullable = false)
     private Long version;
 
-    //공동구매 재고 감소 메소드
-    public void decreaseLimitStock() {
-        this.limitStock = this.limitStock - 1;
+    public static GroupBuyInfo create(
+            Supply supply,
+            Long totalStock,
+            Long discount,
+            LocalDate endDate
+    ) {
+        if (totalStock <= 0) {
+            throw new IllegalArgumentException("totalStock은 1 이상이어야 합니다.");
+        }
+
+        GroupBuyInfo info = new GroupBuyInfo();
+        info.supply = supply;
+        info.totalStock = totalStock;
+        info.limitStock = totalStock;
+        info.discount = discount;
+        info.endDate = endDate;
+        return info;
     }
-    //공동구매 재고 증가 메소드
+
+    public void decreaseLimitStock() {
+        if (this.limitStock <= 0) {
+            throw new IllegalStateException("재고가 부족합니다.");
+        }
+        this.limitStock--;
+    }
+
     public void increaseLimitStock() {
-        this.limitStock = this.limitStock + 1;
+        if (this.limitStock >= this.totalStock) {
+            return; // ❗ 방어 로직
+        }
+        this.limitStock++;
     }
 }
