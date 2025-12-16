@@ -1,5 +1,6 @@
 package com.kh.lifeFit.controller;
 
+import com.kh.lifeFit.domain.groupBuy.GroupBuyStatus;
 import com.kh.lifeFit.dto.groupBuy.GroupBuyApplyRequest;
 import com.kh.lifeFit.dto.groupBuy.GroupBuyApplyResponse;
 import com.kh.lifeFit.service.groupBuyService.GroupBuyService;
@@ -18,16 +19,26 @@ public class GroupBuyController {
             @PathVariable Long groupBuyInfoId,
             @RequestBody GroupBuyApplyRequest request) {
 
-        boolean success = groupBuyService.participate(groupBuyInfoId, request.getUserId());
+        GroupBuyStatus status = groupBuyService.participate(groupBuyInfoId, request.getUserId());
 
-        if (success) {
-            return ResponseEntity.ok(
-                    new GroupBuyApplyResponse(true, "공동구매 성공")
-            );
-        } else {
+        if(status == null){
             return ResponseEntity.status(409).body(
-                    new GroupBuyApplyResponse(false, "재고 부족 또는 동시성 충돌")
+                    new GroupBuyApplyResponse(
+                            false,
+                            "재고가 부족합니다.",
+                            null
+                    )
             );
         }
+
+        String message = (status == GroupBuyStatus.BUY) ? "공동구매 신청" :"공동구매 취소";
+
+        return ResponseEntity.ok(
+                new GroupBuyApplyResponse(
+                        true,
+                        message,
+                        status
+                )
+        );
     }
 }

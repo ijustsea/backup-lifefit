@@ -6,6 +6,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(
+        name = "group_buy",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uq_group_buy_user_info",
+                        columnNames = {"user_id", "group_buy_info_id"}
+                )
+        }
+)
 @Getter
 @NoArgsConstructor
 public class GroupBuy {
@@ -36,4 +45,7 @@ public class GroupBuy {
         this.status = status;
     }
 
+    public void changeStatus(GroupBuyStatus status) {
+        this.status = status;
+    }
 }
