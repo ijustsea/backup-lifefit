@@ -1,4 +1,4 @@
-package com.kh.lifeFit.dto.heartData.MonitoringPage;
+package com.kh.lifeFit.dto.heartData.monitoringPage;
 
 public record HeartRateDataResponse(
         HeartDataDashboardDto heartDataDashboardDto, // 상단 심박수 통계

@@ -1,4 +1,4 @@
-package com.kh.lifeFit.repository.HeartDataRepository;
+package com.kh.lifeFit.repository.heartDataRepository;
 
 import com.kh.lifeFit.domain.heartData.HeartRateAlert;
 import org.springframework.data.jpa.repository.JpaRepository;

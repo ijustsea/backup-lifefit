@@ -1,4 +1,4 @@
-package com.kh.lifeFit.dto.heartData.MonitoringPage;
+package com.kh.lifeFit.dto.heartData.monitoringPage;
 
 public record HeartDataDashboardDto(
         int currentHeartRate,   // 현재 심박수

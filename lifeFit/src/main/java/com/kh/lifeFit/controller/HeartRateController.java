@@ -1,6 +1,6 @@
 package com.kh.lifeFit.controller;
 
-import com.kh.lifeFit.dto.heartData.MonitoringPage.HeartDataRequestDto;
+import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
 import com.kh.lifeFit.service.heartRateService.HeartRateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

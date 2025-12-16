@@ -1,4 +1,4 @@
-package com.kh.lifeFit.dto.heartData.MonitoringPage;
+package com.kh.lifeFit.dto.heartData.monitoringPage;
 
 import java.time.LocalDateTime;
 

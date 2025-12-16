@@ -1,4 +1,4 @@
-package com.kh.lifeFit.dto.heartData.AdminLogPage;
+package com.kh.lifeFit.dto.heartData.adminLogPage;
 
 import com.kh.lifeFit.domain.heartData.ProcessStatus;
 

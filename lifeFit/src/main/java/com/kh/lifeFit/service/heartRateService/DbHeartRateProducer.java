@@ -2,8 +2,8 @@ package com.kh.lifeFit.service.heartRateService;
 
 import com.kh.lifeFit.domain.heartData.HeartRateData;
 import com.kh.lifeFit.domain.user.User;
-import com.kh.lifeFit.dto.heartData.MonitoringPage.HeartDataRequestDto;
-import com.kh.lifeFit.repository.HeartDataRepository.HeartRateDataRepository;
+import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
+import com.kh.lifeFit.repository.heartDataRepository.HeartRateDataRepository;
 import com.kh.lifeFit.repository.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

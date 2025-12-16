@@ -1,4 +1,4 @@
-package com.kh.lifeFit.dto.heartData.AlertPage;
+package com.kh.lifeFit.dto.heartData.alertPage;
 
 import java.util.List;
 
