@@ -2,10 +2,13 @@ package com.kh.lifeFit.dto.heartData.monitoringPage;
 
 import com.kh.lifeFit.domain.heartData.HeartRateData;
 import com.kh.lifeFit.domain.heartData.HeartRateStatus;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+@Builder
 public record HeartDataListDto(
         LocalDateTime measuredAt, // 측정 시간
         String timeAge,           // 경과 시간 "5분 전"
