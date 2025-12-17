@@ -16,6 +16,15 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
+@Table(
+        name = "health_data",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uq_user_checkup_date",
+                        columnNames = {"user_id", "checkup_date"}
+                )
+        }
+)
 public class HealthData {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
