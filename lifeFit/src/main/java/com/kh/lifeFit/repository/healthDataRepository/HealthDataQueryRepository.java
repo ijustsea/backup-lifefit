@@ -6,6 +6,7 @@ import com.kh.lifeFit.domain.healthData.QHealthData;
 import com.kh.lifeFit.dto.healthData.HealthDataFilterRequest;
 import com.kh.lifeFit.dto.healthData.HealthDataResponse;
 import com.kh.lifeFit.dto.healthData.QHealthDataResponse;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -48,15 +49,8 @@ public class HealthDataQueryRepository {
                                 h.checkupDate))
                         .from(h)
                         .where(
-                                nameLike(filter.getName()),
-                                deptLike(filter.getDept()),
-                                startDate(filter.getStartDate()),
-                                endDate(filter.getEndDate()),
-                                checkGender(filter.getGender()),
-                                checkBmiRange(filter.getBmi()),
-                                checkBloodSugarRange(filter.getBloodSugar()),
-                                checkBloodPressureRange(filter.getBloodPressure()),
-                                checkupDateRange(filter.getCheckupDate())
+                                baseCondition(filter)
+                                        .and(nameLike(filter.getName()))
                         )
                         .offset(pageable.getOffset())
                         .limit(pageable.getPageSize())
@@ -67,18 +61,28 @@ public class HealthDataQueryRepository {
                 .select(h.count())
                 .from(h)
                 .where(
-                        nameLike(filter.getName()),
-                        deptLike(filter.getDept()),
-                        startDate(filter.getStartDate()),
-                        endDate(filter.getEndDate()),
-                        checkGender(filter.getGender()),
-                        checkBmiRange(filter.getBmi()),
-                        checkBloodSugarRange(filter.getBloodSugar()),
-                        checkBloodPressureRange(filter.getBloodPressure()),
-                        checkupDateRange(filter.getCheckupDate())
+                        baseCondition(filter)
+                                .and(nameLike(filter.getName()))
                 );
 
         return PageableExecutionUtils.getPage(list, pageable, countQuery::fetchOne);
+    }
+
+    private BooleanBuilder baseCondition(HealthDataFilterRequest filter) {
+
+        BooleanBuilder builder = new BooleanBuilder();
+
+        builder.and(deptLike(filter.getDept()));
+        builder.and(recordedDateFrom(filter.getStartDate()));
+        builder.and(recordedDateTo(filter.getEndDate()));
+        builder.and(checkGender(filter.getGender()));
+        builder.and(checkBmiRange(filter.getBmi()));
+        builder.and(checkBloodSugarRange(filter.getBloodSugar()));
+        builder.and(checkBloodPressureRange(filter.getBloodPressure()));
+        builder.and(checkupDateRange(filter.getCheckupDate()));
+
+        return builder;
+
     }
 
     private BooleanExpression nameLike(String name){
@@ -95,13 +99,13 @@ public class HealthDataQueryRepository {
         return h.userDepartment.containsIgnoreCase(dept);
     }
 
-    private BooleanExpression startDate(LocalDate startDate){
+    private BooleanExpression recordedDateFrom(LocalDate startDate){
         if(startDate == null){
             return null;
         }
         return h.recordedDate.goe(startDate.atStartOfDay());
     }
-    private BooleanExpression endDate(LocalDate endDate){
+    private BooleanExpression recordedDateTo(LocalDate endDate){
         if(endDate == null){
             return null;
         }
@@ -149,7 +153,7 @@ public class HealthDataQueryRepository {
         }
         return switch (bloodPressure) {
             case "normal" -> h.systolic.lt(120).and(h.diastolic.lt(80));
-            case "pre_hypertension" -> h.systolic.between(120, 139).and(h.diastolic.between(80, 89));
+            case "pre_hypertension" -> h.systolic.between(120, 139).or(h.diastolic.between(80, 89));
             case "hypertension" -> h.systolic.goe(140).or(h.diastolic.goe(90));
             default -> null;
         };
