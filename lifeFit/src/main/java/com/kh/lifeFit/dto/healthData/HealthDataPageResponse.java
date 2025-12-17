@@ -14,8 +14,8 @@ public class HealthDataPageResponse {
     private long totalCount;
     private int totalPages;
 
-    public HealthDataPageResponse(List<HealthDataResponse> data, Page<?> pageInfo){
-        this.data = data;
+    public HealthDataPageResponse(Page<HealthDataResponse> pageInfo){
+        this.data = pageInfo.getContent();
         this.totalCount = pageInfo.getTotalElements();
         this.totalPages = pageInfo.getTotalPages();
         this.pageable = new PageableInfo(pageInfo.getNumber(), pageInfo.getSize());
