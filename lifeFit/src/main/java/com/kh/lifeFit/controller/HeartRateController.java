@@ -8,8 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/heart-rates") // 공통 주소
+@RequestMapping("/api/heart-rate") // 공통 주소
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:5173")
 public class HeartRateController {
 
     private final HeartRateService heartRateService;

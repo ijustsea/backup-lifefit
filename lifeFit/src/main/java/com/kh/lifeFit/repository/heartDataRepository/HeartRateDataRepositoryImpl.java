@@ -32,7 +32,7 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
 
         // 심박수 데이터가 없는 경우
         if (currentHeartRate == null) {
-            return new HeartDataStatsDto(0, 0, 0);
+            return new HeartDataStatsDto(0, 0, 0, null);
         }
 
         // 평균 & 최대 심박수 조회
@@ -62,7 +62,8 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
         return new HeartDataStatsDto(
                 currentHeartRate,
                 avgHeartRate,
-                maxHeartRate != null ? maxHeartRate : 0
+                maxHeartRate != null ? maxHeartRate : 0,
+                null
         );
     }
 

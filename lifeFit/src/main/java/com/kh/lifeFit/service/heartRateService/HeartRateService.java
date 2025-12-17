@@ -1,6 +1,7 @@
 package com.kh.lifeFit.service.heartRateService;
 
 import com.kh.lifeFit.domain.heartData.HeartRateData;
+import com.kh.lifeFit.domain.heartData.HeartRateStatus;
 import com.kh.lifeFit.dto.heartData.monitoringPage.*;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateDataRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,16 +29,6 @@ public class HeartRateService {
     // 실시간 심박수 데이터(현재 심박수 | 평균 심박수 | 최고 심박수)
     public HeartRateDataResponse getDashboardData(Long userId, int limit) {
 
-        //============ 심박수 통계 조회 ============
-        // 심박수 통계(현재 심박수, 평균 심박수, 최고 심박수)
-        HeartDataStatsDto statsDto = heartRateDataRepository.findStatsByHeartRate(userId);
-
-        //============ 최근 30분간 심박수 추이 차트 조회 ============
-        // 기준 시간 설정(현재 시간 기준으로 30분 전 시간)
-        LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
-        // 차트 데이터 가져오기
-        List<HeartDataChartDto> chartData = heartRateDataRepository.findChartData(userId, thirtyMinutesAgo);
-
         //============ 오늘의 심박수 리스트 조회 ============
         // 0페이지부터 limit 개수만큼 가져오라는 뜻 (Top N 쿼리와 비슷)
         Pageable pageable = PageRequest.of(0, limit);
@@ -50,7 +41,36 @@ public class HeartRateService {
                 .toList();
         // == .map(entity-> HeartDataListDto.from(entity)).toList();
 
+        //============ 현재 상태(Status) 추출 ============
+        // 리스트가 비어있을 수 있으니 안전하게 처리
+        HeartRateStatus currentStatus = HeartRateStatus.NORMAL; // 기본값
+        if(!recentDatalist.isEmpty()){
+            // 최신 데이터(0번)의 상태 가져오기
+            currentStatus = recentDatalist.get(0).getStatus();
+        }
+
+        //============ 심박수 통계 조회 ============
+        // 심박수 통계(현재 심박수, 평균 심박수, 최고 심박수)
+        HeartDataStatsDto statsDto = heartRateDataRepository.findStatsByHeartRate(userId);
+        // DB에서 가져온 통계 + 방금 구한 Status 합치기
+        HeartDataStatsDto findStatsDto = new HeartDataStatsDto(
+                statsDto.currentHeartRate(),
+                statsDto.avgHeartRate(),
+                statsDto.maxHeartRate(),
+                currentStatus
+        );
+
+
+
+        //============ 최근 30분간 심박수 추이 차트 조회 ============
+        // 기준 시간 설정(현재 시간 기준으로 30분 전 시간)
+        LocalDateTime thirtyMinutesAgo = LocalDateTime.now().minusMinutes(30);
+        // 차트 데이터 가져오기
+        List<HeartDataChartDto> chartData = heartRateDataRepository.findChartData(userId, thirtyMinutesAgo);
+
+
+
         // 반환 (HeartDataChartDto)
-        return new HeartRateDataResponse(statsDto, chartData, listItems);
+        return new HeartRateDataResponse(findStatsDto, chartData, listItems);
     }
 }
