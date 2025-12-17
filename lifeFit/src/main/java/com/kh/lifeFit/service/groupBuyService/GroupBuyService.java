@@ -9,6 +9,7 @@
     import jakarta.persistence.EntityManager;
     import jakarta.persistence.OptimisticLockException;
     import lombok.RequiredArgsConstructor;
+    import lombok.extern.slf4j.Slf4j;
     import org.springframework.orm.ObjectOptimisticLockingFailureException;
     import org.springframework.retry.annotation.Backoff;
     import org.springframework.retry.annotation.Retryable;
@@ -16,7 +17,7 @@
     import org.springframework.transaction.annotation.Transactional;
 
     import java.util.Optional;
-
+    @Slf4j
     @Service
     @RequiredArgsConstructor
     public class GroupBuyService {
@@ -26,14 +27,16 @@
 
         @Retryable(
                 value = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
-                maxAttempts = 3,
+                maxAttempts = 5,
                 backoff = @Backoff(delay = 50)
         )
         @Transactional
         public GroupBuyStatus participate(Long groupBuyInfoId, Long userId) {
 
+            log.info("🟡 [TRY] userId={} 참여 시도", userId);
+
             // 1) 공동구매 대상 조회
-            GroupBuyInfo info = groupBuyInfoRepository.findById(groupBuyInfoId)
+            GroupBuyInfo info = groupBuyInfoRepository.findByIdForUpdate(groupBuyInfoId)
                     .orElseThrow(() -> new IllegalArgumentException("공동구매 정보를 찾을 수 없습니다."));
 
             // 2) 공동구매 참여여부 확인
