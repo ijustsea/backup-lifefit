@@ -1,6 +1,7 @@
 package com.kh.lifeFit.repository.heartDataRepository;
 
 import com.kh.lifeFit.domain.heartData.HeartRateData;
+import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataChartDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataStatsDto;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
@@ -8,6 +9,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.kh.lifeFit.domain.heartData.QHeartRateData.heartRateData;
@@ -30,7 +32,7 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
 
         // 심박수 데이터가 없는 경우
         if (currentHeartRate == null) {
-            return new HeartDataStatsDto(0, 0.0, 0);
+            return new HeartDataStatsDto(0, 0, 0);
         }
 
         // 평균 & 최대 심박수 조회
@@ -45,17 +47,40 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
                 .fetchOne();
 
         // 현재 심박수 + 평균 & 최대 심박수 결합
-        // stats가 null일 경우
-        Double avgHeartRate = (stats != null) ? stats.get(heartRateData.heartRate.avg()) : 0.0;
-        Integer maxHeartRate = (stats != null) ? stats.get(heartRateData.heartRate.max()) : 0;
+        Integer avgHeartRate = 0;
+        Integer maxHeartRate = 0;
+        // Double -> Integer 변환 로직 & stats가 null일 경우
+        if(stats != null){
+            Double averageHeartRate = stats.get(heartRateData.heartRate.avg()); // 타입 에러 방지를 위해 Double로 꺼내기
+            if (averageHeartRate != null) {
+                avgHeartRate = (int) Math.round(averageHeartRate); // 반올림으로 정수값 받기
+            }
+            maxHeartRate = stats.get(heartRateData.heartRate.max());
+        }
 
         // 결합된 1개의 객체
         return new HeartDataStatsDto(
                 currentHeartRate,
-                avgHeartRate != null ? avgHeartRate : 0.0,
+                avgHeartRate,
                 maxHeartRate != null ? maxHeartRate : 0
         );
     }
+
+    // 상단 '최근 30분간 심박수 추이'
+    @Override
+    public List<HeartDataChartDto> findChartData(Long userId, LocalDateTime startTime){
+        return queryFactory
+                .select(Projections.constructor(HeartDataChartDto.class,
+                        heartRateData.measuredAt,  // time
+                        heartRateData.heartRate))  // value
+                .from(heartRateData)
+                .where(
+                        heartRateData.userId.eq(userId),
+                        heartRateData.measuredAt.goe(startTime)) // startTime 이후 데이터만
+                .orderBy(heartRateData.measuredAt.asc())         // chart는 왼쪽(과거)->오른쪽(최신)이라 오름차순
+                .fetch();
+    }
+
 
     @Override
     public List<HeartRateData> findRecentData(Long userId, Pageable pageable) {

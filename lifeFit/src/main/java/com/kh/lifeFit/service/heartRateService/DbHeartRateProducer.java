@@ -18,8 +18,6 @@ public class DbHeartRateProducer implements HeartRateProducer {
 
     @Override
     public void send(HeartDataRequestDto dto) {
-        // System.out.println("DB에 저장: " + dto.heartRate());
-
         // 1. 사용자(직원) 정보 조회
         Long userId = dto.userId();
         User user = userRepository.findById(userId).orElseThrow(()-> new IllegalArgumentException("존재하지 않는 회원입니다."));
