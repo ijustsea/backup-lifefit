@@ -9,7 +9,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import static com.kh.lifeFit.domain.heartData.QHeartRateData.heartRateData;
@@ -21,6 +23,9 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
 
     @Override
     public HeartDataStatsDto findStatsByHeartRate(Long userId) {
+
+        // 심박수 통계 '오늘'로 기간 설정 -> 오늘 00:00:00
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
 
         // 현재 심박수 조회
         Integer currentHeartRate = queryFactory
@@ -43,7 +48,10 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
                         heartRateData.heartRate.max()
                 )
                 .from(heartRateData)
-                .where(heartRateData.userId.eq(userId))
+                .where(
+                        heartRateData.userId.eq(userId),
+                        heartRateData.measuredAt.goe(startOfToday)
+                )
                 .fetchOne();
 
         // 현재 심박수 + 평균 & 최대 심박수 결합

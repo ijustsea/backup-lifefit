@@ -6,6 +6,7 @@ import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateDataRepository;
 import com.kh.lifeFit.repository.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,18 +20,25 @@ public class DbHeartRateProducer implements HeartRateProducer {
     @Override
     public void send(HeartDataRequestDto dto) {
         // 1. 사용자(직원) 정보 조회
-        Long userId = dto.userId();
-        User user = userRepository.findById(userId).orElseThrow(()-> new IllegalArgumentException("존재하지 않는 회원입니다."));
+        User user = userRepository.findById(dto.userId()).orElseThrow(()-> new IllegalArgumentException("존재하지 않는 회원입니다."));
 
         // 2. 나이 조회
         int userAge = user.getAge();
 
+        // 3. 변화량 계산용 -> 최신 심박수 데이터 1건 조회
+        // PageRequst.of(0,1)을 사용
+        int lastHeartRate = heartRateDataRepository.findRecentData(dto.userId(), PageRequest.of(0,1))
+                .stream()
+                .map(HeartRateData::getHeartRate)
+                .findFirst()
+                .orElse(dto.heartRate()); // 첫 측정은 데이터 X 변화량 0으로 처리하기
+
         // 3. 엔티티 생성 (엔티티 내부에서 스스로 위험/정상 판단을 끝냄)
         HeartRateData heartRateData = HeartRateData.builder()
-                .userId(userId)
+                .userId(dto.userId())
                 .heartRate(dto.heartRate())
                 .measuredAt(dto.measuredAt())
-                .variation(0)
+                .variation(dto.heartRate() - lastHeartRate)
                 .age(userAge)
                 .gender(user.getGender())
                 .build();
