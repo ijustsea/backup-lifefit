@@ -36,11 +36,10 @@ public class SecurityConfig {
 
 
                 /* 권한(ROLE) 기반 URL 접근 제어 */
-                .requestMatchers("/admin/**").hasRole("SYS_ADMIN")
-                .requestMatchers("/hr/**").hasRole("HR_MANAGER")
-                .requestMatchers("/employee/**").hasRole("EMPLOYEE")
-
-                .anyRequest().authenticated()
+                .requestMatchers("/admin/health").hasRole("SYS_ADMIN")
+                .requestMatchers("/admin/heart-rate-log").hasRole("HR_MANAGER")
+                // 🔥 나머지는 직원만
+                .anyRequest().hasRole("EMPLOYEE")
         );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
