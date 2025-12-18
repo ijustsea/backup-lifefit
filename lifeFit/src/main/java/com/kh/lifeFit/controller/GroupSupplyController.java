@@ -17,7 +17,6 @@
     @RestController
     @RequiredArgsConstructor
     @RequestMapping("/api")
-    @CrossOrigin(origins = "*")
     public class GroupSupplyController {
 
         private final GroupSupplyService groupSupplyService;
