@@ -1,10 +1,14 @@
 package com.kh.lifeFit.repository.heartDataRepository;
 
 import com.kh.lifeFit.domain.heartData.HeartRateData;
+import com.kh.lifeFit.domain.heartData.HeartRateStatus;
+import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertListDto;
+import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertSearchRequest;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataChartDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataStatsDto;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +25,7 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
 
     private final JPAQueryFactory queryFactory;
 
+    //================================ 실시간 심박수 ==============================================
     @Override
     public HeartDataStatsDto findStatsByHeartRate(Long userId) {
 
@@ -101,4 +106,49 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
                 .limit(pageable.getPageSize())  // 가져올 개수 (limit)
                 .fetch();
     }
+
+
+    //================================ 심박수 알림 내역 ==============================================
+
+    //리스트 조회
+    @Override
+    public List<HeartAlertListDto> findAlertList(Long userId, HeartAlertSearchRequest request, Pageable pageable){
+        return queryFactory
+                .select(Projections.constructor(HeartAlertListDto.class,
+                        heartRateData.measuredAt,
+                        heartRateData.heartRate,
+                        heartRateData.status
+                ))
+                .from(heartRateData)
+                .where(
+                        heartRateData.userId.eq(userId),
+                        heartRateData.status.ne(HeartRateStatus.NORMAL),
+                        statusEq(request.getStatus()),
+                        dateBetween(request.getStartDate(), request.getEndDate())
+                )
+                .orderBy(heartRateData.measuredAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+    }
+
+    // 상태 필터 로직
+    private BooleanExpression statusEq(HeartRateStatus status) {
+        // '전체' 선택시 status가 null로 들어오면 조건을 null로 반환
+        return status != null ? heartRateData.status.eq(status) : null;
+    }
+
+    // 날짜 범위 로직
+    private BooleanExpression dateBetween(LocalDate startDate, LocalDate endDate) {
+        // 날짜가 하나라도 없으면 NO필터링
+        if(startDate == null || endDate == null) return null;
+
+        // LocalDate를 LocalDateTime 범위로 변환 (00:00:00 ~ 23:59:59)
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        return heartRateData.measuredAt.between(startDateTime, endDateTime);
+    }
+
+
 }
