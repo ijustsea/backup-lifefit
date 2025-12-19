@@ -10,11 +10,11 @@ public record HeartAlertStatsDto(
         HeartRateStatus dangerStatus    // 위험 상태 Enum 객체 전체
 ){
 
-    public HeartAlertStatsDto(Long cautionCount, Long dangerCount){
+    public HeartAlertStatsDto(Long totalCount, Integer cautionCount, Integer dangerCount){
         this(
-                (cautionCount != null ? cautionCount : 0L) + (dangerCount != null ? dangerCount : 0L),
-                cautionCount,
-                dangerCount,
+                totalCount,
+                cautionCount != null ? cautionCount.longValue() : 0L,
+                dangerCount != null ? dangerCount.longValue() : 0L,
                 HeartRateStatus.CAUTION,
                 HeartRateStatus.DANGER
         );
