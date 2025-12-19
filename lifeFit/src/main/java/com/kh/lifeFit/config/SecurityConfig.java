@@ -52,8 +52,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "http://192.168.20.60:5173"
+                "http://localhost:5173",          // 로컬용
+                "https://lifefits.store",         // 실제 프론트 (Vercel)
+                "https://www.lifefits.store"      // 실제 프론트 (Vercel)
         ));
 
         config.setAllowedMethods(List.of(
