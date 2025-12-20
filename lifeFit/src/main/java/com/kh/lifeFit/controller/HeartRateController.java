@@ -4,10 +4,12 @@ import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertSearchRequest;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartRateAlertResponse;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartRateDataResponse;
+import com.kh.lifeFit.jwt.CustomUserDetails;
 import com.kh.lifeFit.service.heartRateService.HeartRateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -67,6 +69,7 @@ public class HeartRateController {
     @GetMapping("/alert")
     public ResponseEntity<HeartRateAlertResponse> getAlert(
             @RequestParam Long userId,
+            //@AuthenticationPrincipal CustomUserDetails userDetails,
             HeartAlertSearchRequest request,
             Pageable pageable
     ){
