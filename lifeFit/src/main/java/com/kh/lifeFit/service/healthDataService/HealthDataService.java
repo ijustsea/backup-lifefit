@@ -2,6 +2,8 @@ package com.kh.lifeFit.service.healthDataService;
 
 import com.kh.lifeFit.dto.healthData.HealthDataFilterRequest;
 import com.kh.lifeFit.dto.healthData.HealthDataResponse;
+import com.kh.lifeFit.dto.healthData.HealthDataSummaryRequest;
+import com.kh.lifeFit.dto.healthData.HealthDataSummaryResponse;
 import com.kh.lifeFit.repository.healthDataRepository.HealthDataQueryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,10 @@ public class HealthDataService {
 
     public Page<HealthDataResponse> getHealthDataList(HealthDataFilterRequest filter, Pageable pageable) {
         return repository.selectHealthDataList(filter, pageable);
+    }
+
+    public HealthDataSummaryResponse getHealthDataSummary(HealthDataSummaryRequest filter) {
+        return repository.getHealthDataSummary(filter);
     }
 
 }
