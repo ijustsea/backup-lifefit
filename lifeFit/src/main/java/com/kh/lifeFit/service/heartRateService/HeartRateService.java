@@ -86,17 +86,27 @@ public class HeartRateService {
     public HeartRateAlertResponse getAlertData(Long userId, HeartAlertSearchRequest request, Pageable pageable) {
 
         // 날짜 확정 로직
-        // '오늘'이 기본값
-        LocalDate startDate = (request.getStartDate() != null) ? request.getStartDate() : LocalDate.now();
-        LocalDate endDate = (request.getEndDate() != null) ? request.getEndDate() : LocalDate.now();
+        // 통계용 -> 첫 진입
+        LocalDate latestDate = heartRateDataRepository.getLatestDate(userId);
 
-        // 확정된 날짜를 Request 객체에 다시 넣기 -> QueryDSL 용
-        request.setStartDate(startDate);
-        request.setEndDate(endDate);
+        // 상단 통계용
+        // 오늘 데이터 없으면 DB에서 사용자의 가장 최근 데이터 날짜로 가져오기
+        HeartAlertSearchRequest statsRequest = new HeartAlertSearchRequest();
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            statsRequest.setStartDate(request.getStartDate());
+            statsRequest.setEndDate(request.getEndDate());
+        }else {
+            statsRequest.setStartDate(latestDate);
+            statsRequest.setEndDate(latestDate);
+        }
+        HeartAlertStatsDto stats = heartRateDataRepository.findAlertStats(userId, statsRequest);
 
-        // 동일한 파라미터로 통계와 리스트 조회 -> 데이터 정합성 확보
-        HeartAlertStatsDto stats = heartRateDataRepository.findAlertStats(userId,request);
+        // 하단 리스트
+        // 첫 진입시 request.startDate = null이라서 전체 조회
         Page<HeartAlertListDto> list = heartRateDataRepository.findAlertList(userId, request, pageable);
+
+        LocalDate startDate = (request.getStartDate() != null) ? request.getStartDate() : latestDate;
+        LocalDate endDate = (request.getEndDate() != null) ? request.getEndDate() : latestDate;
 
         // SSOT 기반의 모든 데이터를 Response에 담아 반환
         return new HeartRateAlertResponse(stats, list, startDate, endDate);

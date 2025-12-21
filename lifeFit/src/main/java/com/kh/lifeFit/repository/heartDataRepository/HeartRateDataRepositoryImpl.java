@@ -187,14 +187,24 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
     // 날짜 범위 로직
     private BooleanExpression dateFilter(LocalDate startDate, LocalDate endDate) {
         // 기간 조회
-        // 첫 진입 or 위험 등급만 선택한 경우 -> "오늘"이 기준
+        // 첫 진입 or 날짜 선택 안 했을 경우 기간 제한 없이 전체 조회
         if(startDate == null || endDate == null){
-            LocalDate today = LocalDate.now();
-            return heartRateData.measuredAt.between(today.atStartOfDay(), today.atTime(LocalTime.MAX));
+            return  null;
         }
         // 기간 조회 있는 경우
         return heartRateData.measuredAt.between(startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
     }
 
+    @Override
+    public LocalDate getLatestDate(Long userId){
+        LocalDateTime maxTime = queryFactory
+                .select(heartRateData.measuredAt.max())
+                .from(heartRateData)
+                .where(heartRateData.userId.eq(userId))
+                .fetchOne();
+
+        // 데이터가 없으면 오늘 날짜 반환(에러 방지) + 데이터 있으면 가장 최근 날짜 반환
+        return (maxTime != null) ? maxTime.toLocalDate() : LocalDate.now();
+    }
 
 }

@@ -9,6 +9,7 @@ import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataStatsDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,4 +27,7 @@ public interface HeartRateDataRepositoryCustom {
 
     // 심박수 알림 통계 조회
     HeartAlertStatsDto findAlertStats(Long userId, HeartAlertSearchRequest request);
+
+    // 사용자의 최신 데이터 가져오기
+    LocalDate getLatestDate(Long userId);
 }
