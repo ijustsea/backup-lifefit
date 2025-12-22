@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/groupbuy")
+@RequestMapping("/api/groupbuy")
 public class GroupBuyController {
 
     private final GroupBuyService groupBuyService;
