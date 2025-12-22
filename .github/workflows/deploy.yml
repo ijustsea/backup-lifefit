@@ -22,6 +22,7 @@ jobs:
 
       # 3. Gradle 빌드
       - name: Build with Gradle
+        working-directory: ./lifeFit
         run: |
           chmod +x gradlew
           ./gradlew clean build -x test
@@ -33,7 +34,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "build/libs/*.jar"
+          source: "lifeFit/build/libs/*.jar"
           target: "/home/ubuntu/lifefit/LifeFit-back/lifeFit/temp"
 
       # 5.안전 배포 + 헬스 체크 + 롤백
