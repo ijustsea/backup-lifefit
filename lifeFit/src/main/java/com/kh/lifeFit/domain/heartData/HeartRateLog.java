@@ -14,7 +14,10 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "heart_rate_log")
+@Table(name = "heart_rate_log", indexes = {
+        @Index(name = "idx_log_created_at", columnList = "createdAt"),
+        @Index(name = "idx_log_user_id", columnList = "userId")
+})
 public class HeartRateLog {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
