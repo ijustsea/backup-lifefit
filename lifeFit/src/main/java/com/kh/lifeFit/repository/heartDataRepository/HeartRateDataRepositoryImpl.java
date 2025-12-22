@@ -98,7 +98,6 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
                 .fetch();
     }
 
-
     @Override
     public List<HeartRateData> findRecentData(Long userId, Pageable pageable) {
         return queryFactory
@@ -147,11 +146,9 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
                         dateFilter(request.getStartDate(), request.getEndDate())
                 )
                 .fetchOne();
-
         // PageImpl 객체로 감싸서 반환 (리스트, 페이징 정보, 전체 개수)
         return new PageImpl<>(list, pageable, tatal != null ? tatal : 0L);
     }
-
 
     // 심박수 알림 통계
     @Override
