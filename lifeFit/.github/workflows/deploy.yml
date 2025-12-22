@@ -1,0 +1,115 @@
+name: LifeFit Back-end CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 소스 코드 체크아웃
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # 2.JDK 17 설정
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Gradle 빌드
+      - name: Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test
+
+      # 4. JAR 파일을 EC2 임시 폴더로 전송
+      - name: Copy JAR to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "build/libs/*.jar"
+          target: "/home/ubuntu/lifefit/LifeFit-back/lifeFit/temp"
+
+      # 5.안전 배포 + 헬스 체크 + 롤백
+      - name: Deploy and Safe Restart
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 실패 시 즉시 멈추라는 설정으로 서버 꼬임 방지
+            set -e
+
+            APP_DIR="/home/ubuntu/lifefit/LifeFit-back/lifeFit"
+            DEPLOY_DIR="/home/ubuntu/lifefit/LifeFit-back/lifeFit/temp"
+            
+            # 폴더가 없으면 자동 생성
+            mkdir -p $APP_DIR
+            mkdir -p $DEPLOY_DIR
+            
+            echo "▶ Looking for new JAR in $DEPLOY_DIR"
+            
+            # 폴더 깊숙이 있는 가장 최근에 만든 JAR 찾아 전체 경로를 저장
+            NEW_JAR_PATH=$(find $DEPLOY_DIR -name "*.jar" -type f | xargs ls -t | head -n 1)
+            
+            # -z는 NEW_JAR_PATH가 비어 있는지 검사
+            if [ -z "$NEW_JAR_PATH" ]; then
+              echo "❌ No JAR file found in $DEPLOY_DIR"
+              exit 1
+            fi
+            
+            echo "▶ New JAR found at: $NEW_JAR_PATH"
+
+            cd $APP_DIR
+
+            # 1. 기존 파일 백업 (보험)
+            if [ -f "app.jar" ]; then
+              echo "▶ Backup current app.jar"
+              mv app.jar app.jar.bak
+            fi
+
+            # 2. 새 버전 적용 (NEW_JAR_PATH 변수 사용)
+            echo "▶ Apply new JAR"
+            mv "$NEW_JAR_PATH" app.jar
+            
+            # 임시 폴더 청소 (전송된 찌꺼기 제거)
+            rm -rf "$DEPLOY_DIR"/*
+            
+            # 3. 서비스 재시작 1차 시동
+            echo "▶ Restart service"
+            sudo systemctl restart lifefit
+            sleep 2
+              sudo systemctl is-active --quiet lifefit || {
+                echo "❌ systemd failed to start"
+                mv app.jar.bak app.jar
+                sudo systemctl restart lifefit
+                exit 1
+            }
+            
+            # 4. 헬스 체크 2차 주행
+            echo "▶ Health check start"
+            for i in {1..10}; do
+              STATUS=$(curl -s http://localhost:8080/health || echo "fail")
+              if [ "$STATUS" = "OK" ]; then
+                echo "✅ Health check success"
+                rm -f app.jar.bak
+                exit 0
+              fi
+              echo "⏳ Waiting for server... ($i/10)"
+              sleep 5
+            done
+
+            # 5. 최종 실패 시 롤백, 이전 버전으로 복구
+            echo "❌ Health check failed. Rolling back."
+            if [ -f "app.jar.bak" ]; then
+              mv app.jar.bak app.jar
+              sudo systemctl restart lifefit
+            fi
+            exit 1
