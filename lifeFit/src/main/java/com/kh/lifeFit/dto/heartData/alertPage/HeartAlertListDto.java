@@ -10,8 +10,6 @@ public record HeartAlertListDto(
         HeartRateStatus status   // 상태 "경고" "위험"
 ) {
 
-    // Jackson 라이브러리는 get으로 시작하는 메서드를 보면
-    // 자동으로 JSON 필드로 추가해준다.
     public String getHeartRateStatusText(){
         return status.getDisplayName(); // "경고" "위험" 한글로 반환
     }

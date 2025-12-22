@@ -1,10 +1,15 @@
 package com.kh.lifeFit.controller;
 
+import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertSearchRequest;
+import com.kh.lifeFit.dto.heartData.alertPage.HeartRateAlertResponse;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartRateDataResponse;
+import com.kh.lifeFit.jwt.CustomUserDetails;
 import com.kh.lifeFit.service.heartRateService.HeartRateService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -12,7 +17,6 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/heart-rate") // 공통 주소
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
 public class HeartRateController {
 
     private final HeartRateService heartRateService;
@@ -25,6 +29,9 @@ public class HeartRateController {
         return ResponseEntity.ok().build(); // 응답body가 없기 때문에 반환형은 Void
     }
 
+    /**
+     * 1. 실시간 심박수 대시보드 데이터 조회
+     */
     // 심박수 조회
     // 대시보드 객체(통계+차트+리스트)를 반환
     @GetMapping("{userId}")
@@ -55,5 +62,19 @@ public class HeartRateController {
 
         return ResponseEntity.ok(String.format("데이터 생성 성공: %d bpm (유저: %d)", randomHeartRate, userId));
     }
+
+    /**
+     * 2. 심박수 알림 내역 조회 (필터링, 페이징 포함)
+     */
+    @GetMapping("/alert")
+    public ResponseEntity<HeartRateAlertResponse> getAlert(
+            @RequestParam Long userId,
+            //@AuthenticationPrincipal CustomUserDetails userDetails,
+            HeartAlertSearchRequest request,
+            Pageable pageable
+    ){
+        return ResponseEntity.ok(heartRateService.getAlertData(userId, request, pageable));
+    }
+
 
 }
