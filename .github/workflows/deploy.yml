@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 2.JDK 17 설정
+      # 2. JDK 17 설정
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
@@ -34,83 +34,112 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          # 빌드된 위치의 jar를 temp 폴더로 전송
           source: "lifeFit/build/libs/*.jar"
           target: "/home/ubuntu/lifefit/LifeFit-back/lifeFit/temp"
 
-      # 5.안전 배포 + 헬스 체크 + 롤백
-      - name: Deploy and Safe Restart
+      # 5. Blue-Green 무중단 배포 로직 (수정된 부분)
+      - name: Blue-Green Safe Deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 실패 시 즉시 멈추라는 설정으로 서버 꼬임 방지
             set -e
 
             APP_DIR="/home/ubuntu/lifefit/LifeFit-back/lifeFit"
-            DEPLOY_DIR="/home/ubuntu/lifefit/LifeFit-back/lifeFit/temp"
+            TEMP_DIR="$APP_DIR/temp"
+            NGINX_CONF="/etc/nginx/sites-available/lifefit"
+
+            mkdir -p $TEMP_DIR
+            cd $APP_DIR
+
+            echo "▶ Detect current port from Nginx"
+            # Nginx 설정파일에서 현재 설정된 포트 번호를 추출합니다.
+            CURRENT_PORT=$(grep -oP 'set \$backend_port \K[0-9]+' $NGINX_CONF)
             
-            # 폴더가 없으면 자동 생성
-            mkdir -p $APP_DIR
-            mkdir -p $DEPLOY_DIR
-            
-            echo "▶ Looking for new JAR in $DEPLOY_DIR"
-            
-            # 폴더 깊숙이 있는 가장 최근에 만든 JAR 찾아 전체 경로를 저장
-            NEW_JAR_PATH=$(find $DEPLOY_DIR -name "*.jar" -type f | xargs ls -t | head -n 1)
-            
-            # -z는 NEW_JAR_PATH가 비어 있는지 검사
-            if [ -z "$NEW_JAR_PATH" ]; then
-              echo "❌ No JAR file found in $DEPLOY_DIR"
+            if [ -z "$CURRENT_PORT" ]; then
+              echo "❌ Cannot detect current backend port from nginx"
               exit 1
             fi
             
-            echo "▶ New JAR found at: $NEW_JAR_PATH"
-
-            cd $APP_DIR
-
-            # 1. 기존 파일 백업 (보험)
-            if [ -f "app.jar" ]; then
-              echo "▶ Backup current app.jar"
-              mv app.jar app.jar.bak
+            if [ "$CURRENT_PORT" = "8080" ]; then
+              TARGET_PORT=8081
+              TARGET_COLOR="green"
+            else
+              TARGET_PORT=8080
+              TARGET_COLOR="blue"
             fi
 
-            # 2. 새 버전 적용 (NEW_JAR_PATH 변수 사용)
-            echo "▶ Apply new JAR"
-            mv "$NEW_JAR_PATH" app.jar
-            
-            # 임시 폴더 청소 (전송된 찌꺼기 제거)
-            rm -rf "$DEPLOY_DIR"/*
-            
-            # 3. 서비스 재시작 1차 시동
-            echo "▶ Restart service"
-            sudo systemctl restart lifefit
-            sleep 2
-              sudo systemctl is-active --quiet lifefit || {
-                echo "❌ systemd failed to start"
-                mv app.jar.bak app.jar
-                sudo systemctl restart lifefit
-                exit 1
-            }
-            
-            # 4. 헬스 체크 2차 주행
-            echo "▶ Health check start"
-            for i in {1..10}; do
-              STATUS=$(curl -s http://localhost:8080/health || echo "fail")
-              if [ "$STATUS" = "OK" ]; then
-                echo "✅ Health check success"
-                rm -f app.jar.bak
-                exit 0
+            echo "▶ Current=$CURRENT_PORT → Target=$TARGET_PORT ($TARGET_COLOR)"
+
+            # 신규 JAR 파일 찾기 (temp 폴더 내 전송된 파일)
+            # scp-action으로 전송하면 원본 경로 구조가 포함되므로 find를 사용해 실제 jar 파일 위치를 잡습니다.
+            NEW_JAR=$(find "$TEMP_DIR" -type f -name "*.jar" -print0 | xargs -0 ls -t | head -n 1)
+            [ -z "$NEW_JAR" ] && echo "❌ No JAR found in temp directory" && exit 1
+
+            TARGET_JAR="lifefit-$TARGET_COLOR.jar"
+
+            echo "▶ Backup existing $TARGET_JAR"
+            [ -f "$TARGET_JAR" ] && mv "$TARGET_JAR" "$TARGET_JAR.bak"
+
+            echo "▶ Apply new JAR to $TARGET_JAR"
+            mv "$NEW_JAR" "$TARGET_JAR"
+            # 전송된 찌꺼기 폴더/파일 정리
+            rm -rf "$TEMP_DIR"/*
+
+            echo "▶ Restart target service (lifefit-$TARGET_COLOR)"
+            sudo systemctl restart lifefit-$TARGET_COLOR
+            sleep 5
+
+            # 1차 시동 확인
+            sudo systemctl is-active --quiet lifefit-$TARGET_COLOR || {
+              echo "❌ systemd failed to start lifefit-$TARGET_COLOR"
+              if [ -f "$TARGET_JAR.bak" ]; then
+                mv "$TARGET_JAR.bak" "$TARGET_JAR"
+                sudo systemctl restart lifefit-$TARGET_COLOR
               fi
-              echo "⏳ Waiting for server... ($i/10)"
+              exit 1
+            }
+
+            echo "▶ Health check starting on http://127.0.0.1:$TARGET_PORT/health"
+            HEALTH_SUCCESS=false
+            for i in {1..20}; do
+              STATUS=$(curl -s http://127.0.0.1:$TARGET_PORT/health || echo "fail")
+              if [ "$STATUS" = "OK" ]; then
+                echo "✅ Health check success on port $TARGET_PORT"
+                HEALTH_SUCCESS=true
+                break
+              fi
+              echo "⏳ Waiting for server... ($i/20)"
               sleep 5
             done
 
-            # 5. 최종 실패 시 롤백, 이전 버전으로 복구
-            echo "❌ Health check failed. Rolling back."
-            if [ -f "app.jar.bak" ]; then
-              mv app.jar.bak app.jar
-              sudo systemctl restart lifefit
+            if [ "$HEALTH_SUCCESS" = false ]; then
+              echo "❌ Health check failed → Rolling back"
+              if [ -f "$TARGET_JAR.bak" ]; then
+                mv "$TARGET_JAR.bak" "$TARGET_JAR"
+                sudo systemctl restart lifefit-$TARGET_COLOR
+              fi
+              exit 1
             fi
-            exit 1
+
+            echo "▶ Switch Nginx traffic to $TARGET_PORT"
+            sudo sed -i "s/set \$backend_port .*/set \$backend_port $TARGET_PORT;/" $NGINX_CONF
+            sudo systemctl reload nginx || {
+              echo "❌ Nginx reload failed → rollback"
+              sudo sed -i "s/set \$backend_port .*/set \$backend_port $CURRENT_PORT;/" $NGINX_CONF
+              sudo systemctl reload nginx
+              exit 1
+            }
+            
+            echo "▶ Stop old service"
+            if [ "$TARGET_COLOR" = "green" ]; then
+              sudo systemctl stop lifefit-blue || echo "Already stopped"
+            else
+              sudo systemctl stop lifefit-green || echo "Already stopped"
+            fi
+
+            rm -f "$TARGET_JAR.bak"
+            echo "🚀 Blue-Green Deploy Complete! Service is now on $TARGET_PORT"
