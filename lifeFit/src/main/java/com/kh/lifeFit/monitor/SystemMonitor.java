@@ -24,13 +24,14 @@ public class SystemMonitor {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW) // 비즈니스 로직 실패해도 로그는 남도록 분리
     public void recordHeartRateLog(Long userId, String username, int partition, int durationMs, ProcessStatus status, String errorMsg) {
-        HeartRateLog heartRateLog = new HeartRateLog();
-        heartRateLog.setUserId(userId);
-        heartRateLog.setUserName(username);
-        heartRateLog.setPartitionNo(partition);
-        heartRateLog.setProcessingTimeMs(durationMs);
-        heartRateLog.setProcessStatus(status);
-        heartRateLog.setRemarks(status.resolveRemarks(errorMsg));
+        HeartRateLog heartRateLog = HeartRateLog.builder()
+                .userId(userId)
+                .userName(username)
+                .partitionNo(partition)
+                .processingTimeMs(durationMs)
+                .processStatus(status)
+                .remarks(status.resolveRemarks(errorMsg))
+                .build();
 
         heartRateLogRepository.save(heartRateLog);
     }

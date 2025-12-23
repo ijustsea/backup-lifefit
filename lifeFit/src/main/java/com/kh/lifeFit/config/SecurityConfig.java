@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/health").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/health/**").hasRole("HR_MANAGER")
-                        .requestMatchers("/api/admin/**").hasRole("SYS_ADMIN")
+                        .requestMatchers("/api/admin/heart-rate-log/**").hasRole("SYS_ADMIN")
                         .anyRequest().hasRole("EMPLOYEE"));
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
