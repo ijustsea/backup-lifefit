@@ -20,7 +20,7 @@ public class SupplyController {
     private final SupplyService supplyService;
     private final SupplyFilterService supplyFilterService;
     /**
-     * 🔥 QueryDSL 기반 조건 검색 + 페이징.
+     * 🔥 QueryDSL 기반 조건 검색 + 페이징
      * 예: /api/supplies?brand=종근당&type=비타민C&page=0&size=8
      */
     @GetMapping("/supplies")
