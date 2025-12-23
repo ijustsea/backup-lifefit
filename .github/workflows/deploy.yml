@@ -76,7 +76,7 @@ jobs:
 
             # 신규 JAR 파일 찾기 (temp 폴더 내 전송된 파일)
             # scp-action으로 전송하면 원본 경로 구조가 포함되므로 find를 사용해 실제 jar 파일 위치를 잡습니다.
-            NEW_JAR=$(find "$TEMP_DIR" -type f -name "*.jar" -print0 | xargs -0 ls -t | head -n 1)
+            NEW_JAR=$(find "$TEMP_DIR" -type f -name "*.jar" ! -name "*plain.jar" -print0 | xargs -0 ls -t | head -n 1)
             [ -z "$NEW_JAR" ] && echo "❌ No JAR found in temp directory" && exit 1
 
             TARGET_JAR="lifefit-$TARGET_COLOR.jar"
