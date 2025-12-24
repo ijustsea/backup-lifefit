@@ -30,7 +30,9 @@ public class HeartRateController {
         // 클라이언트가 보낸 dto.getUserId()는 무시하고, 토큰의 ID를 강제로 꽂아넣음
         heartRateService.record(
                 customUserDetails.getUserId(),
-                customUserDetails.getUsername(),
+                customUserDetails.getAge(),
+                customUserDetails.getGender(),
+                customUserDetails.getEmail(),
                 dto
         );
         return ResponseEntity.ok().build(); // 응답body가 없기 때문에 반환형은 Void

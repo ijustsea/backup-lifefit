@@ -1,5 +1,6 @@
 package com.kh.lifeFit.service.heartRateService;
 
+import com.kh.lifeFit.domain.common.Gender;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,9 @@ public class HeartRateDataMockRunner {
         int randomHeartRate = ThreadLocalRandom.current().nextInt(60, 161);
 
         // 가상 이름
-        String mockUserName = "MockUser_" + randomUserId.toString();
+        int mockAge = ThreadLocalRandom.current().nextInt(20, 61); // 20~60세
+        Gender mockGender = (randomUserId % 2 == 0) ? Gender.MALE : Gender.FEMALE;
+        String mockEmail = "user" + randomUserId + "@lifefit.com";
 
         HeartDataRequestDto dto = new HeartDataRequestDto(
                 randomUserId,
@@ -38,7 +41,7 @@ public class HeartRateDataMockRunner {
 
         try {
             // 실제 서비스 로직 호출
-            heartRateService.record(randomUserId, mockUserName, dto);
+            heartRateService.record(randomUserId, mockAge, mockGender, mockEmail, dto);
             // log.info("데이터 생성 성공: 유저 {}, 심박수 {}", randomUserId, randomHeartRate);
         }catch (Exception e){
             // 실패 시 로그만 남기고 멈추지 않음 (FAIL_SERVER 등 테스트용)

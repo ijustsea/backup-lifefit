@@ -1,9 +1,8 @@
 package com.kh.lifeFit.service.heartRateService;
 
+import com.kh.lifeFit.domain.common.Gender;
 import com.kh.lifeFit.domain.heartData.HeartRateData;
-import com.kh.lifeFit.domain.heartData.HeartRateLog;
 import com.kh.lifeFit.domain.heartData.HeartRateStatus;
-import com.kh.lifeFit.domain.heartData.ProcessStatus;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertListDto;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertSearchRequest;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertStatsDto;
@@ -35,7 +34,7 @@ public class HeartRateService {
      * 심박수 데이터 기록 및 관리자 로그 생성
      */
     @Transactional
-    public void record(Long userId, String userName, HeartDataRequestDto dto){
+    public void record(Long userId, int age, Gender gender, String email, HeartDataRequestDto dto){
         long startTime = System.currentTimeMillis(); // 처리 시작 시간 측정
 
         // 인증된 userId를 DTO에 강제로 주입 (보안 핵심으로 IDOR 방지)
@@ -46,39 +45,9 @@ public class HeartRateService {
                 dto.measuredAt()
         );
 
-        try {
-            // 로직 실행 - 사용자 데이터 처리 (kafka전송 & DB저장)
-            // 유저 정보가 보정된 DTO를 프로듀서에게 전달
-            heartRateProducer.send(securedDto);
-
-            // 로그 - 성공 로그 기록
-            long duration = System.currentTimeMillis() - startTime;
-            saveAdminLog(userId, userName, ProcessStatus.SUCCESS, duration, "정상 처리 완료");
-        } catch (Exception e) {
-            // 로그 - 실패 로그 기록
-            saveAdminLog(userId, userName, ProcessStatus.FAIL_SERVER, 0, e.getMessage());
-            throw e; // 호출자에게 예외를 다시 던져서 트랜잭션 처리
-        }
-    }
-
-    /**
-     * 관리자 로그 테이블(HeartRateLog) 저장 내부 메서드
-     */
-    private void saveAdminLog(Long userId, String username, ProcessStatus status, long duration, String errorMsg) {
-
-        String finalRemark = status.resolveRemarks(errorMsg);
-
-        HeartRateLog log = HeartRateLog.builder()
-                .userId(userId)
-                .userName(username)
-                .processStatus(status)
-                .processingTimeMs((int) duration)   // 형변환
-                .partitionNo((int) (userId % 4))    // 파티션 분산 시뮬레이션
-                .remarks(finalRemark)               // 가공된 비고(Remark)
-                .build();
-
-        heartRateLogRepository.save(log);
-
+        // Producer에게 위임하기
+        // DB 저장 | kafka 방식이든 동일
+        heartRateProducer.send(securedDto, age, gender, email);
     }
 
     /**
