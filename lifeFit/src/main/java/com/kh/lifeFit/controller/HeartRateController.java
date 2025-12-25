@@ -64,12 +64,11 @@ public class HeartRateController {
      */
     @GetMapping("/alert")
     public ResponseEntity<HeartRateAlertResponse> getAlert(
-            @RequestParam Long userId,
-            //@AuthenticationPrincipal CustomUserDetails userDetails,
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
             HeartAlertSearchRequest request,
             Pageable pageable
     ){
-        return ResponseEntity.ok(heartRateService.getAlertData(userId, request, pageable));
+        return ResponseEntity.ok(heartRateService.getAlertData(customUserDetails.getUserId(), request, pageable));
     }
 
 
