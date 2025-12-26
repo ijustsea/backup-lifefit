@@ -9,11 +9,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @Slf4j
 @RestController
@@ -23,7 +26,7 @@ public class HealthDataController {
     private final HealthDataService healthDataService;
 
     @GetMapping("/api/admin/health")
-    public ResponseEntity<HealthDataPageResponse> getHealthDataList (@ModelAttribute HealthDataFilterRequest filter, @PageableDefault Pageable pageable) {
+    public ResponseEntity<HealthDataPageResponse> getHealthDataList (@ModelAttribute HealthDataFilterRequest filter, @PageableDefault(sort = "recordedDate", direction = DESC) Pageable pageable) {
         try {
             Pageable fixedPageable = PageRequest.of(pageable.getPageNumber(), 10, pageable.getSort());
             HealthDataPageResponse result = new HealthDataPageResponse(healthDataService.getHealthDataList(filter, fixedPageable));
@@ -38,6 +41,9 @@ public class HealthDataController {
     public ResponseEntity<HealthDataSummaryResponse> getHealthDataSummary (@ModelAttribute HealthDataSummaryRequest filter) {
         try {
             return ResponseEntity.ok(healthDataService.getHealthDataSummary(filter));
+        } catch (IllegalArgumentException e) {
+            log.warn("HealthData Summary 잘못된 요청. filter={}", filter, e);
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             log.error("HealthData Summary 조회 중 예외 발생. filter={}", filter, e);
             return ResponseEntity.internalServerError().build();
