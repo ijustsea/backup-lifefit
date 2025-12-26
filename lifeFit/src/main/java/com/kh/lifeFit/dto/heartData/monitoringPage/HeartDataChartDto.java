@@ -1,9 +1,7 @@
 package com.kh.lifeFit.dto.heartData.monitoringPage;
 
-import java.time.LocalDateTime;
-
 public record HeartDataChartDto(
-        LocalDateTime time,  // 언제(X축)
-        int value            // 얼마나(Y축)
+        String time,    // 언제(X축), "2025-12-26 15:30"
+        Integer value    // 얼마나(Y축), 평균 심박수
 ) {
 }

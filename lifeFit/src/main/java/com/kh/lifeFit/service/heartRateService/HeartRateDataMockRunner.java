@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class HeartRateDataMockRunner {
 
     private final HeartRateService heartRateService;
-    private static final int INTERVAL_MS = 100; // 2025.12.25 초당 10건(10 TPS)하기 위해 100ms로 설정
+    private static final int INTERVAL_MS = 1000; // 2025.12.25 초당 10건(10 TPS)하기 위해 100ms로 설정
 
     /**
      * 1초(100ms)마다 랜덤 데이터 생성
