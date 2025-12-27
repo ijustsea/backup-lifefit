@@ -60,20 +60,15 @@ public class HeartRateService {
         // 0페이지부터 limit 개수만큼 가져오라는 뜻 (Top N 쿼리와 비슷)
         Pageable pageable = PageRequest.of(0, limit);
         // 심박수 리스트 최근 데이터 10개 가져오기 (DB 조회)
-        List<HeartRateData> recentDatalist = heartRateDataRepository.findRecentData(userId, pageable);
+        List<HeartDataListDto> recentDatalist = heartRateDataRepository.findRecentDataList(userId, pageable);
         // 실시간 심박수 데이터 하단 리스트 DTO
-        // 엔티티 -> DTO 변환 (리스트 내부 아이템 변환)
-        List<HeartDataListDto> listItems = recentDatalist.stream()
-                .map(HeartDataListDto::from)
-                .toList();
-        // == .map(entity-> HeartDataListDto.from(entity)).toList();
 
-        //============ 현재 상태(Status) 추출 ============
+        // 현재 상태(Status) 추출
         // 리스트가 비어있을 수 있으니 안전하게 처리
         HeartRateStatus currentStatus = HeartRateStatus.NORMAL; // 기본값
         if(!recentDatalist.isEmpty()){
             // 최신 데이터(0번)의 상태 가져오기
-            currentStatus = recentDatalist.get(0).getStatus();
+            currentStatus = recentDatalist.get(0).status();
         }
 
         //============ 심박수 통계 조회 ============
@@ -94,7 +89,7 @@ public class HeartRateService {
         List<HeartDataChartDto> chartData = heartRateDataRepository.findChartData(userId, thirtyMinutesAgo);
 
         // 반환 (HeartDataChartDto)
-        return new HeartRateDataResponse(findStatsDto, chartData, listItems);
+        return new HeartRateDataResponse(findStatsDto, chartData, recentDatalist);
     }
 
 

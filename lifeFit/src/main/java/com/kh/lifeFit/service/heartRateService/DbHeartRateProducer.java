@@ -3,11 +3,10 @@ package com.kh.lifeFit.service.heartRateService;
 import com.kh.lifeFit.domain.common.Gender;
 import com.kh.lifeFit.domain.heartData.HeartRateData;
 import com.kh.lifeFit.domain.heartData.ProcessStatus;
-import com.kh.lifeFit.domain.user.User;
+import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataListDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
 import com.kh.lifeFit.monitor.SystemMonitor;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateDataRepository;
-import com.kh.lifeFit.repository.userRepository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
@@ -28,9 +27,9 @@ public class DbHeartRateProducer implements HeartRateProducer {
         try {
             // 변화량 계산용 -> 최신 심박수 데이터 1건 조회
             // PageRequst.of(0,1)을 사용
-            int lastHeartRate = heartRateDataRepository.findRecentData(dto.userId(), PageRequest.of(0,1))
+            int lastHeartRate = heartRateDataRepository.findRecentDataList(dto.userId(), PageRequest.of(0,1))
                     .stream()
-                    .map(HeartRateData::getHeartRate)
+                    .map(HeartDataListDto::heartRate)
                     .findFirst()
                     .orElse(dto.heartRate()); // 첫 측정은 데이터 X 변화량 0으로 처리하기
 

@@ -62,7 +62,7 @@ public class HeartRateDataMockRunner {
             // log.info("데이터 생성 성공: 유저ID {}, 이메일 {}, 심박수 {}", targetUserId, mockEmail, randomHeartRate);
         }catch (Exception e){
             // 실패 시 로그만 남기고 멈추지 않음 (FAIL_SERVER 등 테스트용)
-            log.error("데이터 생성 중 오류 발생: {}", e.getMessage());
+
         }
 
     }
