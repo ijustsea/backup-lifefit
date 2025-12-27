@@ -29,7 +29,9 @@ public record HeartDataListDto(
     }
 
     // 경과 시간 계산 로직 (최근 24시간 기준)
-    private static String calculateTimeAgo(LocalDateTime measuredAt) {
+    public static String calculateTimeAgo(LocalDateTime measuredAt) {
+        if (measuredAt == null) return "-";
+
         LocalDateTime now = LocalDateTime.now();
         Duration duration = Duration.between(measuredAt, now);
         long seconds = duration.getSeconds();

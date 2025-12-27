@@ -6,10 +6,14 @@ import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertListDto;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertSearchRequest;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertStatsDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataChartDto;
+import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataListDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataStatsDto;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.ConstantImpl;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringTemplate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -86,26 +90,53 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
     // 상단 '최근 30분간 심박수 추이'
     @Override
     public List<HeartDataChartDto> findChartData(Long userId, LocalDateTime startTime){
+
+        // 'HH:mm' 문자열로 변환
+        StringTemplate formattedDate = Expressions.stringTemplate(
+                "DATE_FORMAT({0}, {1})",
+                heartRateData.measuredAt,
+                ConstantImpl.create("%H:%i")
+        );
+
         return queryFactory
                 .select(Projections.constructor(HeartDataChartDto.class,
-                        heartRateData.measuredAt,  // time
-                        heartRateData.heartRate))  // value
+                        formattedDate,  // time, 1분 단위로 잘린 시간 (String)
+                        heartRateData.heartRate.avg().round().castToNum(Integer.class) // value, 해당 1분간의 평균 심박수 (Double)-> (Integer)형변환
+                        ))
                 .from(heartRateData)
                 .where(
                         heartRateData.userId.eq(userId),
                         heartRateData.measuredAt.goe(startTime)) // startTime 이후 데이터만
-                .orderBy(heartRateData.measuredAt.asc())         // chart는 왼쪽(과거)->오른쪽(최신)이라 오름차순
+                .groupBy(formattedDate)                          // 분단위 문자열로 그룹
+                .orderBy(formattedDate.asc())         // chart는 왼쪽(과거)->오른쪽(최신)이라 오름차순
                 .fetch();
     }
 
+    // [추가] 실시간 대시보드용 1분 단위 집계 리스트 조회
     @Override
-    public List<HeartRateData> findRecentData(Long userId, Pageable pageable) {
+    public List<HeartDataListDto> findRecentDataList(Long userId, Pageable pageable) {
+
+        // 1분 단위로 그룹화하기 위한 포맷 (HH:mm)
+        StringTemplate formattedMinute = Expressions.stringTemplate(
+                "DATE_FORMAT({0}, {1})",
+                heartRateData.measuredAt,
+                ConstantImpl.create("%Y-%m-%d %H:%i")
+        );
+
         return queryFactory
-                .selectFrom(heartRateData)
+                .select(Projections.constructor(HeartDataListDto.class,
+                        heartRateData.measuredAt.max(), // 1. measuredAt (해당 분의 마지막 시간)
+                        heartRateData.heartRate.avg().round().castToNum(Integer.class), // 2. heartRate (평균)
+                        Expressions.asNumber(0).as("variation"), // 3. variation (집계 시 0으로 처리)
+                        Expressions.asString("").as("timeAge"),  // 4. timeAge (서비스에서 계산)
+                        heartRateData.status.max() // 5. status (해당 분의 최악 상태)
+                ))
+                .from(heartRateData)
                 .where(heartRateData.userId.eq(userId))
-                .orderBy(heartRateData.measuredAt.desc()) // 최신순
-                .offset(pageable.getOffset())   // 페이지 번호 계산 (0부터 시작)
-                .limit(pageable.getPageSize())  // 가져올 개수 (limit)
+                .groupBy(formattedMinute)
+                .orderBy(formattedMinute.desc()) // 최신 분이 위로 오도록
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
     }
 
