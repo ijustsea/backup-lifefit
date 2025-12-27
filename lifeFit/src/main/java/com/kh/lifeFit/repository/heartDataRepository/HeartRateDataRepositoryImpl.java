@@ -90,15 +90,25 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
     // 상단 '최근 30분간 심박수 추이'
     @Override
     public List<HeartDataChartDto> findChartData(Long userId, LocalDateTime startTime){
+
+        // 'HH:mm' 문자열로 변환
+        StringTemplate formattedDate = Expressions.stringTemplate(
+                "DATE_FORMAT({0}, {1})",
+                heartRateData.measuredAt,
+                ConstantImpl.create("%H:%i")
+        );
+
         return queryFactory
                 .select(Projections.constructor(HeartDataChartDto.class,
-                        heartRateData.measuredAt,  // time
-                        heartRateData.heartRate))  // value
+                        formattedDate,  // time, 1분 단위로 잘린 시간 (String)
+                        heartRateData.heartRate.avg().round().castToNum(Integer.class) // value, 해당 1분간의 평균 심박수 (Double)-> (Integer)형변환
+                        ))
                 .from(heartRateData)
                 .where(
                         heartRateData.userId.eq(userId),
                         heartRateData.measuredAt.goe(startTime)) // startTime 이후 데이터만
-                .orderBy(heartRateData.measuredAt.asc())         // chart는 왼쪽(과거)->오른쪽(최신)이라 오름차순
+                .groupBy(formattedDate)                          // 분단위 문자열로 그룹
+                .orderBy(formattedDate.asc())         // chart는 왼쪽(과거)->오른쪽(최신)이라 오름차순
                 .fetch();
     }
 
