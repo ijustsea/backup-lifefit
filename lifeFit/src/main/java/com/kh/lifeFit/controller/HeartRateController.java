@@ -1,5 +1,6 @@
 package com.kh.lifeFit.controller;
 
+import com.kh.lifeFit.domain.common.Gender;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertSearchRequest;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartRateAlertResponse;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
@@ -51,10 +52,12 @@ public class HeartRateController {
 
         // customUserDetails(JWT 토큰)에서 로그인한 사용자의 고유 ID를 가져온다
         Long userId = customUserDetails.getUserId();
+        int age = customUserDetails.getAge();
+        Gender gender = customUserDetails.getGender();
 
         // 서비스 호출 -> 특정 사용자의 최근 심박수 N개를 가져오기
         // 위에서 추출한 userId와 클라이언트가 요청한 limut를 서비스에 전달
-        HeartRateDataResponse response = heartRateService.getDashboardData(userId, limit);
+        HeartRateDataResponse response = heartRateService.getDashboardData(userId, age, gender, limit);
 
         return ResponseEntity.ok(response);
     }

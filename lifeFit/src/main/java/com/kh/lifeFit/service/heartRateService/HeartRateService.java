@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -54,21 +55,49 @@ public class HeartRateService {
      *  실시간 심박수 페이지 데이터 조회
      */
     // 실시간 심박수 데이터(현재 심박수 | 평균 심박수 | 최고 심박수)
-    public HeartRateDataResponse getDashboardData(Long userId, int limit) {
+    public HeartRateDataResponse getDashboardData(Long userId, int age, Gender gender, int limit) {
 
-        //============ 오늘의 심박수 리스트 조회 ============
+        //============ 오늘의 심박수 리스트 조회(1분 단위 집계 & 원본 데이터) ============
         // 0페이지부터 limit 개수만큼 가져오라는 뜻 (Top N 쿼리와 비슷)
         Pageable pageable = PageRequest.of(0, limit);
         // 심박수 리스트 최근 데이터 10개 가져오기 (DB 조회)
         List<HeartDataListDto> recentDatalist = heartRateDataRepository.findRecentDataList(userId, pageable);
-        // 실시간 심박수 데이터 하단 리스트 DTO
+
+        // 변화량 실시간 계싼 로직 적용
+        List<HeartDataListDto> processedList = new ArrayList<>();
+        for (int i = 0; i < recentDatalist.size(); i++) {
+            HeartDataListDto currentData = recentDatalist.get(i);
+            int calculatedVariation = 0;
+
+            // 최신순 정렬 i번째와 i+1번째(직전 시간) 비교
+            if (i < recentDatalist.size() - 1) {
+                HeartDataListDto previousData = recentDatalist.get(i + 1);
+                calculatedVariation = currentData.heartRate() - previousData.heartRate();
+            }
+
+            // 평균 심박수로 상태 재계산
+            HeartRateStatus recalculatedStatus = HeartRateStatus.getHeartRateStatus(
+                    currentData.heartRate(), // 평균 심박수
+                    age,                     // JWT에서 받은 사용자의 나이
+                    gender                   // JWT에서 받은 사용자의 성별
+            );
+
+            // Record는 불변, 새로 생성하여 리스트에 추가하기
+            processedList.add(new HeartDataListDto(
+                    currentData.measuredAt(),
+                    currentData.heartRate(),
+                    calculatedVariation, // 계산된 변화량
+                    HeartDataListDto.calculateTimeAgo(currentData.measuredAt()), // 실시간 계산된 경과 시간
+                    recalculatedStatus   // DB의 max(status) 대신 사용하기
+            ));
+        }
 
         // 현재 상태(Status) 추출
         // 리스트가 비어있을 수 있으니 안전하게 처리
         HeartRateStatus currentStatus = HeartRateStatus.NORMAL; // 기본값
-        if(!recentDatalist.isEmpty()){
+        if(!processedList.isEmpty()){
             // 최신 데이터(0번)의 상태 가져오기
-            currentStatus = recentDatalist.get(0).status();
+            currentStatus = processedList.get(0).status();
         }
 
         //============ 심박수 통계 조회 ============
@@ -89,7 +118,7 @@ public class HeartRateService {
         List<HeartDataChartDto> chartData = heartRateDataRepository.findChartData(userId, thirtyMinutesAgo);
 
         // 반환 (HeartDataChartDto)
-        return new HeartRateDataResponse(findStatsDto, chartData, recentDatalist);
+        return new HeartRateDataResponse(findStatsDto, chartData, processedList);
     }
 
 
