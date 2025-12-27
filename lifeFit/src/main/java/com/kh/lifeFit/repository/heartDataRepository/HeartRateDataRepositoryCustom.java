@@ -22,12 +22,4 @@ public interface HeartRateDataRepositoryCustom {
 
     List<HeartDataListDto> findRecentDataList(Long userId, Pageable pageable);
 
-    // 심박수 알림 리스트 조회
-    Page<HeartAlertListDto> findAlertList(Long userId, HeartAlertSearchRequest request, Pageable pageable);
-
-    // 심박수 알림 통계 조회
-    HeartAlertStatsDto findAlertStats(Long userId, HeartAlertSearchRequest request);
-
-    // 사용자의 최신 데이터 가져오기
-    LocalDate getLatestDate(Long userId);
 }

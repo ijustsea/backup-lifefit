@@ -8,6 +8,7 @@ import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertSearchRequest;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertStatsDto;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartRateAlertResponse;
 import com.kh.lifeFit.dto.heartData.monitoringPage.*;
+import com.kh.lifeFit.repository.heartDataRepository.HeartRateAlertRepository;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateDataRepository;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateLogRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,8 @@ public class HeartRateService {
 
     private final HeartRateProducer heartRateProducer;
     private final HeartRateDataRepository heartRateDataRepository;
-    private final HeartRateLogRepository heartRateLogRepository;    // 로그 저장
+    private final HeartRateAlertRepository heartRateAlertRepository; // 알림
+    private final HeartRateLogRepository heartRateLogRepository;     // 로그 저장
 
     /**
      * 심박수 데이터 기록 및 관리자 로그 생성
@@ -129,7 +131,7 @@ public class HeartRateService {
 
         // 날짜 확정 로직
         // 통계용 -> 첫 진입
-        LocalDate latestDate = heartRateDataRepository.getLatestDate(userId);
+        LocalDate latestDate = heartRateAlertRepository.getLatestAlertDate(userId);
 
         // 상단 통계용
         // 오늘 데이터 없으면 DB에서 사용자의 가장 최근 데이터 날짜로 가져오기
@@ -141,11 +143,11 @@ public class HeartRateService {
             statsRequest.setStartDate(latestDate);
             statsRequest.setEndDate(latestDate);
         }
-        HeartAlertStatsDto stats = heartRateDataRepository.findAlertStats(userId, statsRequest);
+        HeartAlertStatsDto stats = heartRateAlertRepository.findAlertStats(userId, statsRequest);
 
         // 하단 리스트
         // 첫 진입시 request.startDate = null이라서 전체 조회
-        Page<HeartAlertListDto> list = heartRateDataRepository.findAlertList(userId, request, pageable);
+        Page<HeartAlertListDto> list = heartRateAlertRepository.findAlertList(userId, request, pageable);
 
         LocalDate startDate = (request.getStartDate() != null) ? request.getStartDate() : latestDate;
         LocalDate endDate = (request.getEndDate() != null) ? request.getEndDate() : latestDate;
