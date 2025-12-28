@@ -1,11 +1,13 @@
 package com.kh.lifeFit.service.heartRateService;
 
 import com.kh.lifeFit.domain.common.Gender;
+import com.kh.lifeFit.domain.heartData.HeartRateAlert;
 import com.kh.lifeFit.domain.heartData.HeartRateData;
 import com.kh.lifeFit.domain.heartData.ProcessStatus;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataListDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
 import com.kh.lifeFit.monitor.SystemMonitor;
+import com.kh.lifeFit.repository.heartDataRepository.HeartRateAlertRepository;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateDataRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Component;
 public class DbHeartRateProducer implements HeartRateProducer {
 
     private final HeartRateDataRepository heartRateDataRepository;  // DB 저장소
+    private final HeartRateAlertRepository hearRateAlertRepository; // 알림 내역
     private final SystemMonitor systemMonitor;                      // 시스템 로그 모니터링
 
 
@@ -45,6 +48,12 @@ public class DbHeartRateProducer implements HeartRateProducer {
 
             // DB 저장
             heartRateDataRepository.save(heartRateData);
+
+            // 비정상 상태인 경우 알림 테이블에 저장
+            if (heartRateData.getStatus().isAbnormal()){
+                HeartRateAlert alert = new HeartRateAlert(heartRateData);
+                hearRateAlertRepository.save(alert);
+            }
 
             // 성공 로그 기록
             long duration = System.currentTimeMillis() - startTime;
