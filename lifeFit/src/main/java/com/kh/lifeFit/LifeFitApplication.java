@@ -6,7 +6,7 @@ import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @EnableRetry
-//@EnableScheduling
+@EnableScheduling
 @SpringBootApplication
 public class LifeFitApplication {
 
