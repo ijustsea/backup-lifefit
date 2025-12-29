@@ -25,17 +25,13 @@
         private final GroupBuyInfoRepository groupBuyInfoRepository;
         private final EntityManager em;
 
-        @Retryable(
-                value = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
-                maxAttempts = 5,
-                backoff = @Backoff(delay = 50)
-        )
         @Transactional
         public GroupBuyStatus participate(Long groupBuyInfoId, Long userId) {
 
             log.info("🟡 [TRY] userId={} 참여 시도", userId);
 
             // 1) 공동구매 대상 조회
+            // 비관적락으로 조회 시점에 DB 락을 획득하여 다른 트랜잭션의 접근을 순차적으로 제어함
             GroupBuyInfo info = groupBuyInfoRepository.findByIdForUpdate(groupBuyInfoId)
                     .orElseThrow(() -> new IllegalArgumentException("공동구매 정보를 찾을 수 없습니다."));
 
