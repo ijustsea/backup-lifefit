@@ -33,6 +33,22 @@ jobs:
             jpa:
               hibernate:
                 ddl-auto: validate
+            kafka:
+              bootstrap-servers: ${{ secrets.KAFKA_BOOTSTRAP_SERVERS }}
+              properties:
+                security.protocol: SASL_SSL
+                sasl.mechanism: PLAIN
+                sasl.jaas.config: ${{ secrets.KAFKA_SASL_JAAS_CONFIG }}
+              producer:
+                key-serializer: org.apache.kafka.common.serialization.StringSerializer
+                value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+              consumer:
+                group-id: lifefit-group-prod
+                auto-offset-reset: earliest
+                key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+                value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+                properties:
+                  spring.json.trusted.packages: \"*\"
           cloud:
             aws:
               region:
