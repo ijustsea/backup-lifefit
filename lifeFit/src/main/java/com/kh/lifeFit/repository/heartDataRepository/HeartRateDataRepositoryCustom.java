@@ -1,5 +1,6 @@
 package com.kh.lifeFit.repository.heartDataRepository;
 
+import com.kh.lifeFit.domain.heartData.HeartRateData;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertListDto;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertSearchRequest;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertStatsDto;
@@ -22,4 +23,6 @@ public interface HeartRateDataRepositoryCustom {
 
     List<HeartDataListDto> findRecentDataList(Long userId, Pageable pageable);
 
+    // 폴링
+    List<HeartRateData> findPollingData(Long userId, Long lastId);
 }

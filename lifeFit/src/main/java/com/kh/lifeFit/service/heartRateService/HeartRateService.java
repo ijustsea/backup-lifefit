@@ -11,6 +11,7 @@ import com.kh.lifeFit.dto.heartData.monitoringPage.*;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateAlertRepository;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateDataRepository;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateLogRepository;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.kh.lifeFit.domain.heartData.QHeartRateData.heartRateData;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true) // 조회 성능 향상
@@ -32,6 +35,7 @@ public class HeartRateService {
     private final Optional<HeartRateProducer> heartRateProducer;
     private final HeartRateDataRepository heartRateDataRepository;
     private final HeartRateAlertRepository heartRateAlertRepository; // 알림
+    private final JPAQueryFactory queryFactory;
 
     /**
      * 심박수 데이터 기록 및 관리자 로그 생성
@@ -154,5 +158,25 @@ public class HeartRateService {
 
         // SSOT 기반의 모든 데이터를 Response에 담아 반환
         return new HeartRateAlertResponse(stats, list, startDate, endDate);
+    }
+
+    public List<HeartDataListDto> getRecentDataList(Long userId, Long lastId, int age, Gender gender) {
+
+        List<HeartRateData> result = heartRateDataRepository.findPollingData(userId, lastId);
+
+        return result.stream()
+                .map(data -> {
+                    HeartRateStatus status = HeartRateStatus.getHeartRateStatus(
+                            data.getHeartRate(), age, gender);
+
+                    return new HeartDataListDto(
+                            data.getMeasuredAt(),
+                            data.getHeartRate(),
+                            0,
+                            HeartDataListDto.calculateTimeAgo(data.getMeasuredAt()),
+                            status
+                    );
+                })
+                .toList();
     }
 }

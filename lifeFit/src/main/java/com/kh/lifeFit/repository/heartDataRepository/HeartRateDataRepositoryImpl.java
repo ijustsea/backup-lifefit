@@ -1,5 +1,7 @@
 package com.kh.lifeFit.repository.heartDataRepository;
 
+import com.kh.lifeFit.domain.common.Gender;
+import com.kh.lifeFit.domain.heartData.HeartRateData;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataChartDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataListDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataStatsDto;
@@ -128,6 +130,19 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
                 .orderBy(formattedMinute.desc()) // 최신 분이 위로 오도록
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
+                .fetch();
+    }
+
+    @Override
+    public List<HeartRateData> findPollingData(Long userId, Long lastId){
+
+        return queryFactory
+                .selectFrom(heartRateData)
+                .where(
+                        heartRateData.userId.eq(userId),
+                        heartRateData.id.gt(lastId)             // ID 기반 커서 방식
+                )
+                .orderBy(heartRateData.measuredAt.asc())
                 .fetch();
     }
 }
