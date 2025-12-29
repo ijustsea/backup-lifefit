@@ -2,7 +2,12 @@ package com.kh.lifeFit.repository.heartDataRepository;
 
 import com.kh.lifeFit.domain.heartData.HeartRateLog;
 import com.kh.lifeFit.domain.heartData.ProcessStatus;
+import com.kh.lifeFit.dto.heartData.adminLogPage.HeartLogDashboardDto;
+import com.kh.lifeFit.dto.heartData.adminLogPage.HeartLogProcessingDto;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -47,6 +52,54 @@ public class HeartRateLogRepositoryImpl implements HeartRateLogRepositoryCustom{
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total != null ? total : 0L);
+    }
+
+    // 상단 시스템 성능 모니터링 통계
+    @Override
+    public HeartLogDashboardDto getOverallStats() {
+        return queryFactory
+                .select(Projections.constructor(HeartLogDashboardDto.class,
+                        new CaseBuilder()
+                                .when(heartRateLog.processStatus.eq(ProcessStatus.SUCCESS)).then(1L)
+                                .otherwise(0L).sum(),
+                        new CaseBuilder()
+                                .when(heartRateLog.processStatus.ne(ProcessStatus.SUCCESS)).then(1L)
+                                .otherwise(0L).sum(),
+                        heartRateLog.processingTimeMs.avg().coalesce(0.0),  // 평균 소요 시간
+                        Expressions.asNumber(0.0).as("tps")          // TPS (초기값 0.0)
+                ))
+                .from(heartRateLog)
+                .fetchOne();
+    }
+
+    // 상단 파티션별 처리 현황
+    @Override
+    public List<HeartLogProcessingDto> getPartitionStats() {
+        return queryFactory
+                .select(Projections.constructor(HeartLogProcessingDto.class,
+                        heartRateLog.partitionNo,
+                        new CaseBuilder()
+                                .when(heartRateLog.processStatus.eq(ProcessStatus.SUCCESS)).then(1L)
+                                .otherwise(0L).sum(),
+                        new CaseBuilder()
+                                .when(heartRateLog.processStatus.ne(ProcessStatus.SUCCESS)).then(1L)
+                                .otherwise(0L).sum()
+                ))
+                .from(heartRateLog)
+                .groupBy(heartRateLog.partitionNo)
+                .orderBy(heartRateLog.partitionNo.asc())
+                .fetch();
+    }
+
+
+    // 폴링 데이터 조회
+    @Override
+    public List<HeartRateLog> findPollingData(Long lastId) {
+        return queryFactory
+                .selectFrom(heartRateLog)
+                .where(heartRateLog.id.gt(lastId))
+                .orderBy(heartRateLog.id.asc())
+                .fetch();
     }
 
     // 조건 메소드

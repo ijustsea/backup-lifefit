@@ -76,4 +76,42 @@ public class HeartRateAdminService {
 
         return new HeartLogPageResponse(finalDashboard, partitionStats, listDtos);
     }
+
+    public HeartLogPageResponse getPollingLogData(Long lastId) {
+        // 상단 시스템 성능 모니터링 최신화
+        HeartLogDashboardDto dbstats = heartRateLogRepository.getOverallStats();
+
+        // TPS 계산 (기존 로직이랑 동일하게 적용)
+        LocalDateTime tenSecondsAgo = LocalDateTime.now().minusSeconds(10);
+        long recentCount = heartRateLogRepository.countByCreatedAtAfter(tenSecondsAgo);
+        double tps = Math.round((recentCount / 10.0) * 100) / 100.0;
+        double roundedAvgMs = Math.round(dbstats.avgMs() * 100) / 100.0;
+
+        HeartLogDashboardDto finalDashboard = new HeartLogDashboardDto(
+                dbstats.successCount(),
+                dbstats.failCount(),
+                roundedAvgMs,
+                tps  // 계산한 TPS 넣기
+        );
+
+        // 상단 파티션별 처리 현황 최신화
+        List<HeartLogProcessingDto> partitionStats = heartRateLogRepository.getPartitionStats();
+
+        // 신규 로그만 조회
+        List<HeartRateLog> newLogs = heartRateLogRepository.findPollingData(lastId);
+
+        // Entity -> DTO
+        List<HeartLogListDto> listDto = newLogs.stream()
+                .map(log -> new HeartLogListDto(
+                        log.getCreatedAt(),
+                        log.getUserId(),
+                        log.getPartitionNo(),
+                        log.getProcessStatus(),
+                        log.getProcessingTimeMs(),
+                        log.getRemarks()
+                )).toList();
+
+        return new HeartLogPageResponse(finalDashboard, partitionStats, listDto);
+    }
+
 }

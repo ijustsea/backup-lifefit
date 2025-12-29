@@ -3,6 +3,7 @@ package com.kh.lifeFit.controller;
 import com.kh.lifeFit.domain.common.Gender;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartAlertSearchRequest;
 import com.kh.lifeFit.dto.heartData.alertPage.HeartRateAlertResponse;
+import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataListDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartRateDataResponse;
 import com.kh.lifeFit.jwt.CustomUserDetails;
@@ -14,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/heart-rate") // 공통 주소
@@ -74,5 +76,19 @@ public class HeartRateController {
         return ResponseEntity.ok(heartRateService.getAlertData(customUserDetails.getUserId(), request, pageable));
     }
 
+    /**
+     * 3. 폴링용 메서드
+     */
+    @GetMapping("/me/polling")
+    public ResponseEntity<List<HeartDataListDto>> pollingHeartRate(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestParam(name = "lastId") Long lastId
+    ){
+        return ResponseEntity.ok(heartRateService.getRecentDataList(
+                customUserDetails.getUserId(),
+                lastId,
+                customUserDetails.getAge(),
+                customUserDetails.getGender()));
+    }
 
 }

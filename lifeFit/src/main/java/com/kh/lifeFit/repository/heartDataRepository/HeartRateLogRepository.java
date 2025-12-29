@@ -48,4 +48,6 @@ public interface HeartRateLogRepository extends JpaRepository<HeartRateLog, Long
 
     // 4. TPS 계산용
     long countByCreatedAtAfter(LocalDateTime localDateTime);
+
+    List<HeartRateLog> findPollingData(Long lastId);
 }

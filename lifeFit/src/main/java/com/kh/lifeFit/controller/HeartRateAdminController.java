@@ -10,7 +10,10 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,6 +33,21 @@ public class HeartRateAdminController {
     ){
         // 서비스 호출해 통합 응답 DTO 반환하기
         HeartLogPageResponse response = heartRateAdminService.getAdminLogData(searchRequest, pageable);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 관리자용 실시간 시스템 로그 폴링
+     * (통계 갱신 + 신규 로그 리스트 추가)
+     */
+    @GetMapping("/polling")
+    public ResponseEntity<HeartLogPageResponse> pollAdminLog(
+            @RequestParam(value = "lastId") Long lastId,
+            HeartLogSearchRequest searchRequest){
+
+        // lastId 이후의 최신 통계와 로그 리스트를 가져오기
+        HeartLogPageResponse response = heartRateAdminService.getPollingLogData(lastId);
 
         return ResponseEntity.ok(response);
     }
