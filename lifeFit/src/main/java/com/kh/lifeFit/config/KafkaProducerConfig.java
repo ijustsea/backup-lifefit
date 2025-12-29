@@ -14,8 +14,8 @@ public class KafkaProducerConfig {
     @Bean
     public NewTopic heartRateTopic() {
         return TopicBuilder.name("heart-rate-topic")
-                .partitions(4) //
-                .replicas(1)    // 로컬 테스트용, 복제본 1개
+                .partitions(6) // 0~5
+                .replicas(3)    // 로컬 테스트는 복제본 1개 , Confluent Standard용 적용 중
                 .build();
     }
 }

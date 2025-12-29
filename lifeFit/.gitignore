@@ -39,3 +39,6 @@ out/
 application.yml
 application.yaml
 application-test.yaml
+
+### 설정 파일 제외 ###
+src/main/resources/application-test.yml

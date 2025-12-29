@@ -51,6 +51,9 @@ dependencies {
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api' // QueryDSL
 
     implementation 'software.amazon.awssdk:s3:2.40.12'//s3
+
+    implementation 'org.apache.kafka:kafka-clients'         // kafka
+    implementation 'org.springframework.kafka:spring-kafka' // kafka
 }
 
 // ==== QueryDSL 설정 ====
