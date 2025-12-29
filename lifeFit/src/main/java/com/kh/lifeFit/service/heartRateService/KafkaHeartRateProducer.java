@@ -5,12 +5,14 @@ import com.kh.lifeFit.dto.heartData.monitoringPage.HeartDataRequestDto;
 import com.kh.lifeFit.dto.heartData.monitoringPage.HeartRateKafkaDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component // DbHeartRateProducer의 @Component 주석처리함
 @RequiredArgsConstructor
+@Profile("kafka")
 public class KafkaHeartRateProducer implements HeartRateProducer {
 
     private final KafkaTemplate<String, HeartRateKafkaDto> kafkaTemplate;
@@ -33,9 +35,7 @@ public class KafkaHeartRateProducer implements HeartRateProducer {
         String key = String.valueOf(dto.userId());
         try {
             kafkaTemplate.send(TOPIC, key, kafkaDto);
-            log.info("Kafka Topic 발행 성공 : UserId={}, HeartRate={}", dto.userId(), dto.heartRate());
         } catch (Exception e) {
-            log.error("Kafka 전송 실패 : {}", e.getMessage());
             // fallback 로직 수행 생각 중
         }
     }

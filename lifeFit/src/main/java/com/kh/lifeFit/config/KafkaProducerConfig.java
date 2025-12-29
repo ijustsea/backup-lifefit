@@ -3,9 +3,11 @@ package com.kh.lifeFit.config;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
+@Profile("kafka")
 public class KafkaProducerConfig {
 
     // 심박수 데이터를 보낼 토픽 정의하기

@@ -22,16 +22,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true) // 조회 성능 향상
 public class HeartRateService {
 
-    private final HeartRateProducer heartRateProducer;
+    private final Optional<HeartRateProducer> heartRateProducer;
     private final HeartRateDataRepository heartRateDataRepository;
     private final HeartRateAlertRepository heartRateAlertRepository; // 알림
-    private final HeartRateLogRepository heartRateLogRepository;     // 로그 저장
 
     /**
      * 심박수 데이터 기록 및 관리자 로그 생성
@@ -50,7 +50,7 @@ public class HeartRateService {
 
         // Producer에게 위임하기
         // DB 저장 | kafka 방식이든 동일
-        heartRateProducer.send(securedDto, age, gender, email);
+        heartRateProducer.ifPresent(heartRateProducer -> heartRateProducer.send(securedDto, age, gender, email));
     }
 
     /**
