@@ -58,8 +58,9 @@ jobs:
       # 4. JAR 이름 고정 및 Docker 이미지 빌드
       - name: Build Docker Image
         run: |
-          # JAR 파일 이름을 app.jar로 고정 (Dockerfile과 일치)
-          cp ./lifeFit/build/libs/*.jar ./app.jar
+          rm -f ./app.jar
+          find ./lifeFit/build/libs/ -name "*.jar" ! -name "*plain.jar" -exec cp {} ./app.jar \;
+          
           ls -l ./app.jar
           docker build -t lifefit-api:latest .
           docker save lifefit-api:latest > lifefit-api.tar
