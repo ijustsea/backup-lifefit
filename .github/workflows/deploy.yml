@@ -32,23 +32,7 @@ jobs:
               driver-class-name: com.mysql.cj.jdbc.Driver
             jpa:
               hibernate:
-                ddl-auto: validate
-            kafka:
-              bootstrap-servers: ${{ secrets.KAFKA_BOOTSTRAP_SERVERS }}
-              properties:
-                security.protocol: SASL_SSL
-                sasl.mechanism: PLAIN
-                sasl.jaas.config: ${{ secrets.KAFKA_SASL_JAAS_CONFIG }}
-              producer:
-                key-serializer: org.apache.kafka.common.serialization.StringSerializer
-                value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-              consumer:
-                group-id: lifefit-group-prod
-                auto-offset-reset: earliest
-                key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-                value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-                properties:
-                  spring.json.trusted.packages: \"*\"
+                ddl-auto: validate            
           cloud:
             aws:
               region:
@@ -70,19 +54,26 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # 4. JAR 파일을 EC2 임시 폴더로 전송
-      - name: Copy JAR to EC2
+      # 4. JAR 이름 고정 및 Docker 이미지 빌드
+      - name: Build Docker Image
+        run: |
+          # JAR 파일 이름을 app.jar로 고정 (Dockerfile과 일치)
+          cp lifeFit/build/libs/*-SNAPSHOT.jar app.jar
+          docker build -t lifefit-api:latest .
+          docker save lifefit-api:latest > lifefit-api.tar
+
+      # 5. 아티팩트 전송 (이미지 + 컴포즈 설정)
+      - name: Copy to EC2
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          # 빌드된 위치의 jar를 temp 폴더로 전송
-          source: "lifeFit/build/libs/*.jar"
-          target: "/home/ubuntu/lifefit/LifeFit-back/lifeFit/temp"
+          source: "lifefit-api.tar, docker-compose.yml"
+          target: "/home/ubuntu/lifefit/deploy"
 
-      # 5. Blue-Green 무중단 배포 로직 (수정된 부분)
-      - name: Blue-Green Safe Deploy
+      # 6. 무중단 전환 로직
+      - name: Docker Blue-Green Deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -90,99 +81,45 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-
-            APP_DIR="/home/ubuntu/lifefit/LifeFit-back/lifeFit"
-            TEMP_DIR="$APP_DIR/temp"
+            DEPLOY_DIR="/home/ubuntu/lifefit/deploy"
             NGINX_CONF="/etc/nginx/sites-available/lifefit"
+            cd $DEPLOY_DIR
 
-            mkdir -p $TEMP_DIR
-            cd $APP_DIR
+            echo "▶ 이미지 로드"
+            docker load < lifefit-api.tar
 
-            echo "▶ Detect current port from Nginx"
-            # Nginx 설정파일에서 현재 설정된 포트 번호를 추출합니다.
-            CURRENT_PORT=$(grep -oP 'set \$backend_port \K[0-9]+' $NGINX_CONF)
-            
-            if [ -z "$CURRENT_PORT" ]; then
-              echo "❌ Cannot detect current backend port from nginx"
-              exit 1
-            fi
+            # Nginx에서 현재 활성 포트 추출
+            CURRENT_PORT=$(grep -oP 'set \$backend_port \K[0-9]+' $NGINX_CONF || echo "8081")
             
             if [ "$CURRENT_PORT" = "8080" ]; then
-              TARGET_PORT=8081
-              TARGET_COLOR="green"
+              TARGET_PORT=8081; TARGET_COLOR="green"; OLD_COLOR="blue"
             else
-              TARGET_PORT=8080
-              TARGET_COLOR="blue"
+              TARGET_PORT=8080; TARGET_COLOR="blue"; OLD_COLOR="green"
             fi
 
-            echo "▶ Current=$CURRENT_PORT → Target=$TARGET_PORT ($TARGET_COLOR)"
+            echo "▶ $TARGET_COLOR ($TARGET_PORT) 신규 가동"
+            docker-compose up -d lifefit-$TARGET_COLOR
 
-            # 신규 JAR 파일 찾기 (temp 폴더 내 전송된 파일)
-            # scp-action으로 전송하면 원본 경로 구조가 포함되므로 find를 사용해 실제 jar 파일 위치를 잡습니다.
-            NEW_JAR=$(find "$TEMP_DIR" -type f -name "*.jar" ! -name "*plain.jar" -print0 | xargs -0 ls -t | head -n 1)
-            [ -z "$NEW_JAR" ] && echo "❌ No JAR found in temp directory" && exit 1
-
-            TARGET_JAR="lifefit-$TARGET_COLOR.jar"
-
-            echo "▶ Backup existing $TARGET_JAR"
-            [ -f "$TARGET_JAR" ] && mv "$TARGET_JAR" "$TARGET_JAR.bak"
-
-            echo "▶ Apply new JAR to $TARGET_JAR"
-            mv "$NEW_JAR" "$TARGET_JAR"
-            # 전송된 찌꺼기 폴더/파일 정리
-            rm -rf "$TEMP_DIR"/*
-
-            echo "▶ Restart target service (lifefit-$TARGET_COLOR)"
-            sudo systemctl restart lifefit-$TARGET_COLOR
-            sleep 5
-
-            # 1차 시동 확인
-            sudo systemctl is-active --quiet lifefit-$TARGET_COLOR || {
-              echo "❌ systemd failed to start lifefit-$TARGET_COLOR"
-              if [ -f "$TARGET_JAR.bak" ]; then
-                mv "$TARGET_JAR.bak" "$TARGET_JAR"
-                sudo systemctl restart lifefit-$TARGET_COLOR
-              fi
-              exit 1
-            }
-
-            echo "▶ Health check starting on http://127.0.0.1:$TARGET_PORT/health"
+            # Health Check
             HEALTH_SUCCESS=false
             for i in {1..20}; do
-              STATUS=$(curl -s http://127.0.0.1:$TARGET_PORT/health || echo "fail")
-              if [ "$STATUS" = "OK" ]; then
-                echo "✅ Health check success on port $TARGET_PORT"
-                HEALTH_SUCCESS=true
-                break
+              if [ "$(curl -s http://127.0.0.1:$TARGET_PORT/health)" = "OK" ]; then
+                HEALTH_SUCCESS=true; break
               fi
-              echo "⏳ Waiting for server... ($i/20)"
-              sleep 5
+              echo "⏳ 대기 중... ($i/20)"; sleep 5
             done
 
             if [ "$HEALTH_SUCCESS" = false ]; then
-              echo "❌ Health check failed → Rolling back"
-              if [ -f "$TARGET_JAR.bak" ]; then
-                mv "$TARGET_JAR.bak" "$TARGET_JAR"
-                sudo systemctl restart lifefit-$TARGET_COLOR
-              fi
-              exit 1
+              echo "❌ 배포 실패"; exit 1
             fi
 
-            echo "▶ Switch Nginx traffic to $TARGET_PORT"
+            echo "▶ Nginx 전환 및 정리"
             sudo sed -i "s/set \$backend_port .*/set \$backend_port $TARGET_PORT;/" $NGINX_CONF
-            sudo systemctl reload nginx || {
-              echo "❌ Nginx reload failed → rollback"
-              sudo sed -i "s/set \$backend_port .*/set \$backend_port $CURRENT_PORT;/" $NGINX_CONF
-              sudo systemctl reload nginx
-              exit 1
-            }
-            
-            echo "▶ Stop old service"
-            if [ "$TARGET_COLOR" = "green" ]; then
-              sudo systemctl stop lifefit-blue || echo "Already stopped"
-            else
-              sudo systemctl stop lifefit-green || echo "Already stopped"
-            fi
+            sudo systemctl reload nginx
 
-            rm -f "$TARGET_JAR.bak"
-            echo "🚀 Blue-Green Deploy Complete! Service is now on $TARGET_PORT"
+            # 안전한 정리: 이전 컨테이너만 정지하고 이미지는 캐시 유지
+            docker-compose stop lifefit-$OLD_COLOR
+            docker image prune -f  # <--- system 대신 image prune으로 안전하게!
+            rm -f lifefit-api.tar
+            
+            echo "🚀 배포 완벽 성공!"
