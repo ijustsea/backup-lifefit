@@ -51,7 +51,7 @@ public class HeartRateAlertRepositoryImpl implements HeartRateAlertRepositoryCus
                 .fetch();
 
         // 데이터 전체 개수 조회 (페이징 계산용)
-        Long tatal = queryFactory
+        Long total = queryFactory
                 .select(heartRateAlert.count())
                 .from(heartRateAlert)
                 .join(heartRateAlert.heartRateData, heartRateData)
@@ -62,7 +62,7 @@ public class HeartRateAlertRepositoryImpl implements HeartRateAlertRepositoryCus
                 )
                 .fetchOne();
         // PageImpl 객체로 감싸서 반환 (리스트, 페이징 정보, 전체 개수)
-        return new PageImpl<>(list, pageable, tatal != null ? tatal : 0L);
+        return new PageImpl<>(list, pageable, total != null ? total : 0L);
     }
 
     // 심박수 알림 통계
@@ -112,12 +112,15 @@ public class HeartRateAlertRepositoryImpl implements HeartRateAlertRepositoryCus
     // 날짜 범위 로직
     private BooleanExpression dateFilter(LocalDate startDate, LocalDate endDate) {
         // 기간 조회
-        // 첫 진입 or 날짜 선택 안 했을 경우 기간 제한 없이 전체 조회
-        if(startDate == null || endDate == null){
-            return  null;
-        }
-        // 기간 조회 있는 경우
-        return heartRateData.measuredAt.between(startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
-    }
+        // 첫 진입 or 날짜 선택 안 했을 경우 오늘 날짜로 기본값
+        LocalDate start = (startDate != null) ? startDate : LocalDate.now();
+        LocalDate end = (endDate != null) ? endDate : LocalDate.now();
 
+        // 기간 조회 있는 경우
+        // 시작일(00:00:00)부터 종료일(23:59:59)로 범위 지정
+        return heartRateData.measuredAt.between(
+                startDate.atStartOfDay(),
+                endDate.atTime(LocalTime.MAX)
+        );
+    }
 }

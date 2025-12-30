@@ -132,6 +132,13 @@ public class HeartRateService {
      * 심박수 알림 내역 페이지 데이터 조회
      */
     public HeartRateAlertResponse getAlertData(Long userId, HeartAlertSearchRequest request, Pageable pageable) {
+        // 기준 날짜 가져오기 (데이터가 없으면 오늘, 있으면 가장 최근 데이터 날짜)
+        LocalDate lastestDate = heartRateAlertRepository.getLatestAlertDate(userId);
+        // [SSOT] 실제 쿼리에 사용할 시작일과 종료일 확정
+        LocalDate findStartDate = (request.getStartDate() != null) ? request.getStartDate() : lastestDate;
+        LocalDate findEndDate = (request.getEndDate() != null) ? request.getEndDate() : lastestDate;
+        // 확정된 날짜를 파라미터로 직접 전달
+
 
         // 날짜 확정 로직
         // 통계용 -> 첫 진입
