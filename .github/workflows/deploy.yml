@@ -32,7 +32,8 @@ jobs:
               driver-class-name: com.mysql.cj.jdbc.Driver
             jpa:
               hibernate:
-                ddl-auto: validate            
+                ddl-auto: validate
+            
           cloud:
             aws:
               region:
@@ -58,7 +59,7 @@ jobs:
       - name: Build Docker Image
         run: |
           # JAR 파일 이름을 app.jar로 고정 (Dockerfile과 일치)
-          cp lifeFit/build/libs/*-SNAPSHOT.jar app.jar
+          cp lifeFit/build/libs/*.jar app.jar
           docker build -t lifefit-api:latest .
           docker save lifefit-api:latest > lifefit-api.tar
 
@@ -81,9 +82,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            DEPLOY_DIR="/home/ubuntu/lifefit/deploy"
             NGINX_CONF="/etc/nginx/sites-available/lifefit"
-            cd $DEPLOY_DIR
+            cd /home/ubuntu/lifefit/deploy
 
             echo "▶ 이미지 로드"
             docker load < lifefit-api.tar
@@ -118,7 +118,7 @@ jobs:
             sudo systemctl reload nginx
 
             # 안전한 정리: 이전 컨테이너만 정지하고 이미지는 캐시 유지
-            docker-compose stop lifefit-$OLD_COLOR
+            docker-compose stop lifefit-$OLD_COLOR || true
             docker image prune -f  # <--- system 대신 image prune으로 안전하게!
             rm -f lifefit-api.tar
             
