@@ -6,10 +6,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 public class Challenge {
 
@@ -42,5 +42,29 @@ public class Challenge {
 
     @Column(length = 1000)
     private String description;
+
+    public boolean isJoinable (LocalDateTime appliedDate) {
+        LocalDate applied = appliedDate.toLocalDate();
+        return participantLimit > participantCount && status == ChallengeStatus.ONGOING && !applied.isBefore(startDate) && !applied.isAfter(endDate);
+    }
+
+    public void validateJoinable (LocalDateTime appliedDate) {
+        if (!isJoinable(appliedDate)) {
+            throw new IllegalStateException("참여할 수 없는 챌린지입니다.");
+        }
+    }
+
+    public void increaseParticipantCount () {
+        participantCount++;
+        if (participantCount == participantLimit) {
+            status = ChallengeStatus.FULL;
+        }
+    }
+
+    public void endIfExpired (LocalDate today) {
+        if (status != ChallengeStatus.ENDED && endDate.isBefore(today)){
+            status = ChallengeStatus.ENDED;
+        }
+    }
 
 }

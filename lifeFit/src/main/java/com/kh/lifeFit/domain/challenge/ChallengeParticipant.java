@@ -27,11 +27,11 @@ import java.time.LocalDateTime;
 public class ChallengeParticipant {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "challenge_participant_id")
+    @Column(name = "challenge_participant_id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
