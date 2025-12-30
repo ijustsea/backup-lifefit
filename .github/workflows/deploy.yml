@@ -100,7 +100,7 @@ jobs:
             fi
 
             echo "▶ $TARGET_COLOR ($TARGET_PORT) 신규 가동"
-            docker-compose up -d lifefit-$TARGET_COLOR
+            docker compose up -d lifefit-$TARGET_COLOR
 
             # Health Check
             HEALTH_SUCCESS=false
@@ -120,7 +120,7 @@ jobs:
             sudo systemctl reload nginx
 
             # 안전한 정리: 이전 컨테이너만 정지하고 이미지는 캐시 유지
-            docker-compose stop lifefit-$OLD_COLOR || true
+            docker compose stop lifefit-$OLD_COLOR || true
             docker image prune -f  # <--- system 대신 image prune으로 안전하게!
             rm -f lifefit-api.tar
             
