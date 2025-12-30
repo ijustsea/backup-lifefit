@@ -1,14 +1,19 @@
 package com.kh.lifeFit.controller;
 
+import com.kh.lifeFit.Exception.AlreadyAppliedException;
 import com.kh.lifeFit.dto.challenge.ChallengeDetailResponse;
 import com.kh.lifeFit.dto.challenge.ChallengeListItemResponse;
 import com.kh.lifeFit.dto.challenge.ChallengeSummaryResponse;
+import com.kh.lifeFit.jwt.CustomUserDetails;
+import com.kh.lifeFit.service.challengeService.ChallengeFacade;
 import com.kh.lifeFit.service.challengeService.ChallengeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -18,6 +23,7 @@ import java.util.List;
 public class ChallengeController {
 
     private final ChallengeService service;
+    private final ChallengeFacade facade;
 
     @GetMapping("/api/challenges/list")
     public List<ChallengeListItemResponse> getChallengeList () {
@@ -35,6 +41,22 @@ public class ChallengeController {
         return service.getChallengeDetail(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+
+    }
+
+    @PostMapping("/api/challenges/{challengeId}/join")
+    public ResponseEntity<Void> joinChallenge (@PathVariable Long challengeId, @AuthenticationPrincipal CustomUserDetails details) {
+
+        try{
+            facade.joinChallenge(details.getUserId(), challengeId);
+            return ResponseEntity.ok().build();
+        }catch (AlreadyAppliedException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }catch (IllegalStateException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
 
     }
 

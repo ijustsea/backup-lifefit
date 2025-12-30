@@ -3,7 +3,6 @@ package com.kh.lifeFit.domain.challenge;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,13 +50,6 @@ public class Challenge {
     public void validateJoinable (LocalDateTime appliedDate) {
         if (!isJoinable(appliedDate)) {
             throw new IllegalStateException("참여할 수 없는 챌린지입니다.");
-        }
-    }
-
-    public void increaseParticipantCount () {
-        participantCount++;
-        if (participantCount == participantLimit) {
-            status = ChallengeStatus.FULL;
         }
     }
 
