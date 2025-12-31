@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -16,6 +17,12 @@ public class ChallengeFacade {
     private final RedissonClient rc;
     private final ChallengeService service;
 
+    @Value("${challenge.lock.wait-time}")
+    private long waitTime;
+
+    @Value("${challenge.lock.lease-time}")
+    private long leaseTime;
+
     public void joinChallenge(Long userId, Long challengeId) {
         // 락 이름
         String key = "lock:challenge:" + challengeId;
@@ -24,8 +31,7 @@ public class ChallengeFacade {
         RLock lock = rc.getLock(key);
 
         try {
-            long waitTime = 1000;
-            boolean isJoinable = lock.tryLock(waitTime, -1, TimeUnit.MILLISECONDS);
+            boolean isJoinable = lock.tryLock(waitTime, leaseTime, TimeUnit.MILLISECONDS);
 
             if (!isJoinable) {
                 log.info("신청 인원이 많아 락을 획득하지 못했습니다.");
