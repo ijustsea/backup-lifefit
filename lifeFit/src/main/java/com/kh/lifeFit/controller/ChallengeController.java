@@ -53,7 +53,10 @@ public class ChallengeController {
         }catch (AlreadyAppliedException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }catch (IllegalStateException e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            if ("요청이 몰려 잠시 후 다시 시도해주세요.".equals(e.getMessage())) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+            }
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
