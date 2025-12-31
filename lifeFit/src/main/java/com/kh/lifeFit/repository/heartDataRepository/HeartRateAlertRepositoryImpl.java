@@ -29,7 +29,7 @@ public class HeartRateAlertRepositoryImpl implements HeartRateAlertRepositoryCus
 
     //리스트 조회 (HeartRateAlert 기준 조회 + HeartRateData 조인)
     @Override
-    public Page<HeartAlertListDto> findAlertList(Long userId, HeartAlertSearchRequest request, Pageable pageable){
+    public Page<HeartAlertListDto> findAlertList(Long userId, HeartAlertSearchRequest request, Pageable pageable, LocalDate startDate, LocalDate endDate) {
 
         // 리스트 조회
         List<HeartAlertListDto> list = queryFactory
@@ -43,7 +43,7 @@ public class HeartRateAlertRepositoryImpl implements HeartRateAlertRepositoryCus
                 .where(
                         heartRateData.userId.eq(userId),
                         statusEq(request.getStatus()),
-                        dateFilter(request.getStartDate(), request.getEndDate())
+                        dateFilter(startDate, endDate)
                 )
                 .orderBy(heartRateData.measuredAt.desc())
                 .offset(pageable.getOffset())
@@ -51,23 +51,23 @@ public class HeartRateAlertRepositoryImpl implements HeartRateAlertRepositoryCus
                 .fetch();
 
         // 데이터 전체 개수 조회 (페이징 계산용)
-        Long tatal = queryFactory
+        Long total = queryFactory
                 .select(heartRateAlert.count())
                 .from(heartRateAlert)
                 .join(heartRateAlert.heartRateData, heartRateData)
                 .where(
                         heartRateData.userId.eq(userId),
                         statusEq(request.getStatus()),
-                        dateFilter(request.getStartDate(), request.getEndDate())
+                        dateFilter(startDate, endDate)
                 )
                 .fetchOne();
         // PageImpl 객체로 감싸서 반환 (리스트, 페이징 정보, 전체 개수)
-        return new PageImpl<>(list, pageable, tatal != null ? tatal : 0L);
+        return new PageImpl<>(list, pageable, total != null ? total : 0L);
     }
 
     // 심박수 알림 통계
     @Override
-    public HeartAlertStatsDto findAlertStats(Long userId, HeartAlertSearchRequest request){
+    public HeartAlertStatsDto findAlertStats(Long userId, HeartAlertSearchRequest request, LocalDate startDate, LocalDate endDate) {
         // 기간 설정 (오늘 00:00:00부터 현재)
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfday = LocalDateTime.now().with(LocalDateTime.MAX);
@@ -83,7 +83,7 @@ public class HeartRateAlertRepositoryImpl implements HeartRateAlertRepositoryCus
                 .join(heartRateAlert.heartRateData, heartRateData)
                 .where(
                         heartRateData.userId.eq(userId),
-                        dateFilter(request.getStartDate(), request.getEndDate())
+                        dateFilter(startDate, endDate)
                 )
                 .fetchOne();
     }
@@ -111,13 +111,12 @@ public class HeartRateAlertRepositoryImpl implements HeartRateAlertRepositoryCus
 
     // 날짜 범위 로직
     private BooleanExpression dateFilter(LocalDate startDate, LocalDate endDate) {
-        // 기간 조회
-        // 첫 진입 or 날짜 선택 안 했을 경우 기간 제한 없이 전체 조회
-        if(startDate == null || endDate == null){
-            return  null;
-        }
-        // 기간 조회 있는 경우
-        return heartRateData.measuredAt.between(startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
-    }
 
+        // 기간 조회 (날짜 없으면 lastestDate 혹은 오늘로 HeartRateService에서 설정함)
+        // 시작일(00:00:00)부터 종료일(23:59:59)로 범위 지정
+        return heartRateData.measuredAt.between(
+                startDate.atStartOfDay(),
+                endDate.atTime(LocalTime.MAX)
+        );
+    }
 }

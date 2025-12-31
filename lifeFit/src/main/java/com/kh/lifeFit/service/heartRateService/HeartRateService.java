@@ -132,32 +132,17 @@ public class HeartRateService {
      * 심박수 알림 내역 페이지 데이터 조회
      */
     public HeartRateAlertResponse getAlertData(Long userId, HeartAlertSearchRequest request, Pageable pageable) {
-
-        // 날짜 확정 로직
-        // 통계용 -> 첫 진입
-        LocalDate latestDate = heartRateAlertRepository.getLatestAlertDate(userId);
-
-        // 상단 통계용
-        // 오늘 데이터 없으면 DB에서 사용자의 가장 최근 데이터 날짜로 가져오기
-        HeartAlertSearchRequest statsRequest = new HeartAlertSearchRequest();
-        if (request.getStartDate() != null && request.getEndDate() != null) {
-            statsRequest.setStartDate(request.getStartDate());
-            statsRequest.setEndDate(request.getEndDate());
-        }else {
-            statsRequest.setStartDate(latestDate);
-            statsRequest.setEndDate(latestDate);
-        }
-        HeartAlertStatsDto stats = heartRateAlertRepository.findAlertStats(userId, statsRequest);
-
-        // 하단 리스트
-        // 첫 진입시 request.startDate = null이라서 전체 조회
-        Page<HeartAlertListDto> list = heartRateAlertRepository.findAlertList(userId, request, pageable);
-
-        LocalDate startDate = (request.getStartDate() != null) ? request.getStartDate() : latestDate;
-        LocalDate endDate = (request.getEndDate() != null) ? request.getEndDate() : latestDate;
+        // 기준 날짜 가져오기 (데이터가 없으면 오늘, 있으면 가장 최근 데이터 날짜)
+        LocalDate lastestDate = heartRateAlertRepository.getLatestAlertDate(userId);
+        // [SSOT] 실제 쿼리에 사용할 시작일과 종료일 확정 (입력된 날짜 없으면 최근 데이터 날짜)
+        LocalDate findStartDate = (request.getStartDate() != null) ? request.getStartDate() : lastestDate;
+        LocalDate findEndDate = (request.getEndDate() != null) ? request.getEndDate() : lastestDate;
+        // 확정된 날짜를 파라미터로 직접 전달 -> 상단 통계 & 하단 리스트 조회
+        HeartAlertStatsDto stats = heartRateAlertRepository.findAlertStats(userId, request, findStartDate, findEndDate);
+        Page<HeartAlertListDto> list = heartRateAlertRepository.findAlertList(userId, request, pageable, findStartDate, findEndDate);
 
         // SSOT 기반의 모든 데이터를 Response에 담아 반환
-        return new HeartRateAlertResponse(stats, list, startDate, endDate);
+        return new HeartRateAlertResponse(stats, list, findStartDate, findEndDate);
     }
 
     public List<HeartDataListDto> getRecentDataList(Long userId, Long lastId, int age, Gender gender) {
