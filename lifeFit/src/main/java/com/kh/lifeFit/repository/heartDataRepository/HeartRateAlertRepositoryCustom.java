@@ -14,10 +14,10 @@ import java.util.List;
 public interface HeartRateAlertRepositoryCustom {
 
     // 리스트 조회
-    Page<HeartAlertListDto> findAlertList(Long userId, HeartAlertSearchRequest request, Pageable pageable);
+    Page<HeartAlertListDto> findAlertList(Long userId, HeartAlertSearchRequest request, Pageable pageable, LocalDate startDate, LocalDate endDate);
 
     // 통계 조회
-    HeartAlertStatsDto findAlertStats(Long userId, HeartAlertSearchRequest request);
+    HeartAlertStatsDto findAlertStats(Long userId, HeartAlertSearchRequest request, LocalDate startDate, LocalDate endDate);
 
     // 알림 발생 날짜 조회
     LocalDate getLatestAlertDate(Long userId);
