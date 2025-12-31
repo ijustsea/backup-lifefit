@@ -2,7 +2,7 @@ package com.kh.lifeFit.service.challengeService;
 
 import com.kh.lifeFit.domain.challenge.Challenge;
 import com.kh.lifeFit.repository.challengeRepository.ChallengeRepository;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +76,7 @@ public class ChallengeConcurrencyTest {
 
     }
 
-    @AfterEach
+    @BeforeEach
     void tearDown() {
         if (challengeId == null) return;
 
