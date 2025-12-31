@@ -61,10 +61,10 @@ public class HeartRateLogRepositoryImpl implements HeartRateLogRepositoryCustom{
                 .select(Projections.constructor(HeartLogDashboardDto.class,
                         new CaseBuilder()
                                 .when(heartRateLog.processStatus.eq(ProcessStatus.SUCCESS)).then(1L)
-                                .otherwise(0L).sum(),
+                                .otherwise(0L).sum(),                    // 성공
                         new CaseBuilder()
                                 .when(heartRateLog.processStatus.ne(ProcessStatus.SUCCESS)).then(1L)
-                                .otherwise(0L).sum(),
+                                .otherwise(0L).sum(),                    // 실패
                         heartRateLog.processingTimeMs.avg().coalesce(0.0),  // 평균 소요 시간
                         Expressions.asNumber(0.0).as("tps")          // TPS (초기값 0.0)
                 ))

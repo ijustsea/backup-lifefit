@@ -55,7 +55,7 @@ public class HeartRateAdminService {
                 : LocalDateTime.now().with(LocalTime.MAX);
 
         // 로그 테이블 조회 (필터 적용)
-        Page<HeartRateLog> logs = heartRateLogRepository.findLogWithFilter(
+        Page<HeartRateLog> logs = heartRateLogRepository.findLogsWithFilter(
                 request.getUserId(),
                 request.getProcessStatus(),
                 startDateTime,
