@@ -46,14 +46,14 @@ public interface ChallengeRepository extends JpaRepository<Challenge, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update Challenge c
-            set c.participantCount = (c.participantCount + 1),
-                c.status = case
-                    when (c.participantCount + 1) >= c.participantLimit
-                        then com.kh.lifeFit.domain.challenge.ChallengeStatus.FULL
-                            else c.status end
-                where c.id = :id
-                    and c.status = com.kh.lifeFit.domain.challenge.ChallengeStatus.ONGOING
-                        and c.participantCount < c.participantLimit
+            set c.status = case
+                when (c.participantCount + 1) >= c.participantLimit
+                    then com.kh.lifeFit.domain.challenge.ChallengeStatus.FULL
+                        else c.status end,
+                            c.participantCount = (c.participantCount + 1)
+                                where c.id = :id
+                                    and c.status = com.kh.lifeFit.domain.challenge.ChallengeStatus.ONGOING
+                                        and c.participantCount < c.participantLimit
     """)
     int incrementCountAndSetFullIfNeeded (@Param("id") Long challengeId);
 

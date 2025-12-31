@@ -73,6 +73,11 @@ public class ChallengeService {
 
         challenge.validateJoinable(appliedAt);
 
+        int result = challengeRepository.incrementCountAndSetFullIfNeeded(challengeId);
+        if(result == 0){
+            throw new IllegalStateException("정원 마감된 챌린지입니다.");
+        }
+
         ChallengeParticipant participant = ChallengeParticipant.create(user, challenge);
 
         try {
@@ -80,11 +85,6 @@ public class ChallengeService {
         } catch (DataIntegrityViolationException e) {
             log.error("챌린지 참여자 등록 중 에러 발생", e);
             throw new AlreadyAppliedException("이미 참여한 챌린지입니다.");
-        }
-
-        int result = challengeRepository.incrementCountAndSetFullIfNeeded(challengeId);
-        if(result == 0){
-            throw new IllegalStateException("정원 마감된 챌린지입니다.");
         }
 
     }
