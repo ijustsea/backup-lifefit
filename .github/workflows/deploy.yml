@@ -40,6 +40,12 @@ jobs:
                 password: ${{ secrets.UPSTASH_REDIS_PASSWORD }}
                 ssl:
                   enabled: true
+            kafka:
+              bootstrap-servers: ${{ secrets.KAFKA_BOOTSTRAP_SERVERS }}
+              properties:
+                security.protocol: SASL_SSL
+                sasl.mechanism: PLAIN
+                sasl.jaas.config: \"org.apache.kafka.common.security.plain.PlainLoginModule required username='${{ secrets.KAFKA_API_KEY }}' password='${{ secrets.KAFKA_API_SECRET }}';\"          
           cloud:
             aws:
               region:
