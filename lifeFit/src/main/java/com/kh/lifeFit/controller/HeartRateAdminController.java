@@ -42,12 +42,10 @@ public class HeartRateAdminController {
      * (통계 갱신 + 신규 로그 리스트 추가)
      */
     @GetMapping("/polling")
-    public ResponseEntity<HeartLogPageResponse> pollAdminLog(
-            @RequestParam(value = "lastId") Long lastId,
-            HeartLogSearchRequest searchRequest){
+    public ResponseEntity<HeartLogPageResponse> pollAdminLog(){
 
         // lastId 이후의 최신 통계와 로그 리스트를 가져오기
-        HeartLogPageResponse response = heartRateAdminService.getPollingLogData(lastId);
+        HeartLogPageResponse response = heartRateAdminService.getPollingLogData();
 
         return ResponseEntity.ok(response);
     }
