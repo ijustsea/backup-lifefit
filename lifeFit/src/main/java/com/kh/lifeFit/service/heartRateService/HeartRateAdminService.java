@@ -5,6 +5,7 @@ import com.kh.lifeFit.dto.heartData.adminLogPage.*;
 import com.kh.lifeFit.repository.heartDataRepository.HeartRateLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,20 +65,19 @@ public class HeartRateAdminService {
         );
 
         // entity -> dto 리스트
-        List<HeartLogListDto> listDtos = logs.getContent().stream()
-                .map(log -> new HeartLogListDto(
+        Page<HeartLogListDto> listDtos = logs.map(log -> new HeartLogListDto(
                         log.getCreatedAt(),
                         log.getUserId(),
                         log.getPartitionNo(),
                         log.getProcessStatus(),
                         log.getProcessingTimeMs(),
                         log.getRemarks()
-                )).toList();
+                ));
 
         return new HeartLogPageResponse(finalDashboard, partitionStats, listDtos);
     }
 
-    public HeartLogPageResponse getPollingLogData(Long lastId) {
+    public HeartLogPageResponse getPollingLogData() {
         // 상단 시스템 성능 모니터링 최신화
         HeartLogDashboardDto dbstats = heartRateLogRepository.getOverallStats();
 
@@ -97,21 +97,9 @@ public class HeartRateAdminService {
         // 상단 파티션별 처리 현황 최신화
         List<HeartLogProcessingDto> partitionStats = heartRateLogRepository.getPartitionStats();
 
-        // 신규 로그만 조회
-        List<HeartRateLog> newLogs = heartRateLogRepository.findPollingData(lastId);
+        Page<HeartLogListDto> emptyPage = new PageImpl<>(List.of());
 
-        // Entity -> DTO
-        List<HeartLogListDto> listDto = newLogs.stream()
-                .map(log -> new HeartLogListDto(
-                        log.getCreatedAt(),
-                        log.getUserId(),
-                        log.getPartitionNo(),
-                        log.getProcessStatus(),
-                        log.getProcessingTimeMs(),
-                        log.getRemarks()
-                )).toList();
-
-        return new HeartLogPageResponse(finalDashboard, partitionStats, listDto);
+        return new HeartLogPageResponse(finalDashboard, partitionStats, emptyPage);
     }
 
 }
