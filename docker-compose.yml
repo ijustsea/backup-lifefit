@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:8080"
     restart: always
-    mem_limit: 800m
+    mem_limit: 700m
 
   lifefit-green:
     image: lifefit-api:latest
@@ -14,4 +14,4 @@ services:
     ports:
       - "8081:8080"
     restart: always
-    mem_limit: 800m
+    mem_limit: 700m
