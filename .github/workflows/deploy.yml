@@ -33,7 +33,13 @@ jobs:
             jpa:
               hibernate:
                 ddl-auto: validate
-            
+            data:
+              redis:
+                host: ${{ secrets.UPSTASH_REDIS_HOST }}
+                port: 6379
+                password: ${{ secrets.UPSTASH_REDIS_PASSWORD }}
+                ssl:
+                  enabled: true
           cloud:
             aws:
               region:
