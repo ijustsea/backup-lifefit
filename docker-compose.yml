@@ -9,7 +9,7 @@ services:
     mem_limit: 700m
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_PROFILES_INCLUDE=kafka
+
 
   lifefit-green:
     image: lifefit-api:latest
@@ -20,4 +20,4 @@ services:
     mem_limit: 700m
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_PROFILES_INCLUDE=kafka
+
