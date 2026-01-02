@@ -8,7 +8,7 @@ services:
     restart: always
     mem_limit: 700m
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_PROFILES_ACTIVE: prod,kafka
 
   lifefit-green:
     image: lifefit-api:latest
@@ -18,4 +18,4 @@ services:
     restart: always
     mem_limit: 700m
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_PROFILES_ACTIVE: prod,kafka
