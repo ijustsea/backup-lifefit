@@ -112,7 +112,7 @@ jobs:
             fi
 
             echo "▶ $TARGET_COLOR ($TARGET_PORT) 신규 가동"
-            SPRING_PROFILES_ACTIVE=prod,kafka docker compose up -d lifefit-$TARGET_COLOR
+            docker compose up -d lifefit-$TARGET_COLOR
 
             # Health Check
             HEALTH_SUCCESS=false
