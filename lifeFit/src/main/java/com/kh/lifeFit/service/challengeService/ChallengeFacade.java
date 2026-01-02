@@ -4,26 +4,38 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
 public class ChallengeFacade {
 
     private final RedissonClient rc;
     private final ChallengeService service;
 
-    @Value("${challenge.lock.wait-time}")
+    public ChallengeFacade(ObjectProvider<RedissonClient> rcProvider, ChallengeService service) {
+        this.rc = rcProvider.getIfAvailable(); // 빈이 없으면 null이 들어감
+        this.service = service;
+    }
+
+    @Value("${challenge.lock.wait-time:3000}")
     private long waitTime;
 
-    @Value("${challenge.lock.lease-time}")
+    @Value("${challenge.lock.lease-time:-1}")
     private long leaseTime;
 
     public void joinChallenge(Long userId, Long challengeId) {
+        // 레디스 없는 환경일 경우 락 없이 바로 실행하고 종료
+        if (rc == null) {
+            log.info("Redis가 비활성화되어 락 없이 챌린지 참가를 진행합니다.");
+            service.joinChallenge(userId, challengeId);
+            return;
+        }
+
         // 락 이름
         String key = "lock:challenge:" + challengeId;
 
