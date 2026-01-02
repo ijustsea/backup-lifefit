@@ -90,6 +90,7 @@ public class HeartRateService {
 
             // Record는 불변, 새로 생성하여 리스트에 추가하기
             processedList.add(new HeartDataListDto(
+                    currentData.id(),
                     currentData.measuredAt(),
                     currentData.heartRate(),
                     calculatedVariation, // 계산된 변화량
@@ -147,21 +148,31 @@ public class HeartRateService {
 
     public List<HeartDataListDto> getRecentDataList(Long userId, Long lastId, int age, Gender gender) {
 
-        List<HeartRateData> result = heartRateDataRepository.findPollingData(userId, lastId);
+        Pageable pageable = PageRequest.of(0, 3);
+        List<HeartDataListDto> aggregatedList = heartRateDataRepository.findRecentDataList(userId, pageable);
 
-        return result.stream()
-                .map(data -> {
-                    HeartRateStatus status = HeartRateStatus.getHeartRateStatus(
-                            data.getHeartRate(), age, gender);
+        List<HeartDataListDto> resultList = new ArrayList<>();
 
-                    return new HeartDataListDto(
-                            data.getMeasuredAt(),
-                            data.getHeartRate(),
-                            0,
-                            HeartDataListDto.calculateTimeAgo(data.getMeasuredAt()),
-                            status
-                    );
-                })
-                .toList();
+        for (int i = 0; i < aggregatedList.size(); i++) {
+            HeartDataListDto current = aggregatedList.get(i);
+            int variation = 0;
+            // 직전 분(i+1)의 평균 데이터가 있다면 차이 계산
+            if (i < aggregatedList.size() - 1) {
+                HeartDataListDto previous = aggregatedList.get(i + 1);
+                variation = current.heartRate() - previous.heartRate();
+            }
+
+            // 실시간 상태 재계산 (현재 분의 평균 심박수 기준)
+            HeartRateStatus status = HeartRateStatus.getHeartRateStatus(current.heartRate(), age, gender);
+            resultList.add(new HeartDataListDto(
+                    current.id(),
+                    current.measuredAt(),
+                    current.heartRate(),
+                    variation, // 1분 평균 간의 변화량
+                    HeartDataListDto.calculateTimeAgo(current.measuredAt()),
+                    status
+            ));
+        }
+        return resultList;
     }
 }

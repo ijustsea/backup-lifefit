@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 
 @Builder
 public record HeartDataListDto(
+        Long id,
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
         LocalDateTime measuredAt, // 측정 시간
         int heartRate,            // 심박수
@@ -20,6 +21,7 @@ public record HeartDataListDto(
 
     public static HeartDataListDto from(HeartRateData heartRateData) {
         return new HeartDataListDto(
+                heartRateData.getId(),
                 heartRateData.getMeasuredAt(),
                 heartRateData.getHeartRate(),
                 heartRateData.getVariation(),

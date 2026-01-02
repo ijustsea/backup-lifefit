@@ -118,6 +118,7 @@ public class HeartRateDataRepositoryImpl implements HeartRateDataRepositoryCusto
 
         return queryFactory
                 .select(Projections.constructor(HeartDataListDto.class,
+                        heartRateData.id.max(),
                         heartRateData.measuredAt.max(), // 1. measuredAt (해당 분의 마지막 시간)
                         heartRateData.heartRate.avg().round().castToNum(Integer.class), // 2. heartRate (평균)
                         Expressions.asNumber(0).as("variation"), // 3. variation (집계 시 0으로 처리)
