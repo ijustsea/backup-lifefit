@@ -9,6 +9,7 @@ services:
     mem_limit: 700m
     environment:
       - "SPRING_PROFILES_ACTIVE=prod,kafka"
+      - JAVA_TOOL_OPTIONS=-Dspring.profiles.active=prod,kafka
 
   lifefit-green:
     image: lifefit-api:latest
@@ -19,4 +20,5 @@ services:
     mem_limit: 700m
     environment:
       - "SPRING_PROFILES_ACTIVE=prod,kafka"
+      - JAVA_TOOL_OPTIONS=-Dspring.profiles.active=prod,kafka
 
