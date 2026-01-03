@@ -44,13 +44,6 @@ jobs:
           "      ssl:" \
           "        enabled: true" \
           "" \
-          "  kafka:" \
-          "    bootstrap-servers: ${{ secrets.KAFKA_BOOTSTRAP_SERVERS }}" \
-          "    properties:" \
-          "      security.protocol: SASL_SSL" \
-          "      sasl.mechanism: PLAIN" \
-          "      sasl.jaas.config: \"org.apache.kafka.common.security.plain.PlainLoginModule required username='${{ secrets.KAFKA_API_KEY }}' password='${{ secrets.KAFKA_API_SECRET }}';\"" \
-          "" \
           "cloud:" \
           "  aws:" \
           "    region:" \
@@ -106,7 +99,14 @@ jobs:
             set -e
             NGINX_CONF="/etc/nginx/sites-available/lifefit"
             cd /home/ubuntu/lifefit/deploy
-
+            
+            echo "▶ .env 생성/갱신"
+            # > 기호는 파일을 새로 만들고, >> 기호는 아래에 내용을 추가합니다.
+            echo "KAFKA_BOOTSTRAP_SERVERS=${{ secrets.KAFKA_BOOTSTRAP_SERVERS }}" > .env
+            echo "KAFKA_API_KEY=${{ secrets.KAFKA_API_KEY }}" >> .env
+            echo "KAFKA_API_SECRET=${{ secrets.KAFKA_API_SECRET }}" >> .env
+            chmod 600 .env
+          
             echo "▶ 이미지 로드"
             docker load < lifefit-api.tar
 
