@@ -49,7 +49,7 @@ jobs:
           "    properties:" \
           "      security.protocol: SASL_SSL" \
           "      sasl.mechanism: PLAIN" \
-          "      sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${{ secrets.KAFKA_API_KEY }}\" password=\"${{ secrets.KAFKA_API_SECRET }}\";'" \
+          "      sasl.jaas.config: \"org.apache.kafka.common.security.plain.PlainLoginModule required username='${{ secrets.KAFKA_API_KEY }}' password='${{ secrets.KAFKA_API_SECRET }}';\"" \
           "" \
           "cloud:" \
           "  aws:" \
