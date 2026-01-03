@@ -24,7 +24,8 @@ jobs:
       - name: Create application-prod.yml
         run: |
           mkdir -p ./lifeFit/src/main/resources
-          echo "spring:
+          cat <<EOF > ./lifeFit/src/main/resources/application-prod.yml
+          spring:
             datasource:
               url: ${{ secrets.DB_URL }}
               username: ${{ secrets.DB_USERNAME }}
@@ -46,6 +47,7 @@ jobs:
                 security.protocol: SASL_SSL
                 sasl.mechanism: PLAIN
                 sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="${{ secrets.KAFKA_API_KEY }}" password="${{ secrets.KAFKA_API_SECRET }}";'          
+          
           cloud:
             aws:
               region:
@@ -58,7 +60,8 @@ jobs:
           jwt:
             secret: ${{ secrets.JWT_SECRET }}
           server:
-            port: 8080" > ./lifeFit/src/main/resources/application-prod.yml
+            port: 8080
+          EOF
 
       # 3. Gradle 빌드
       - name: Build with Gradle
