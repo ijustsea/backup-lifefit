@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.kh.lifeFit.repository.userRepository.UserRepository;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +27,7 @@ public class HeartRateConsumer {
 
     private final HeartRateDataRepository heartRateDataRepository;
     private final HeartRateAlertRepository hearRateAlertRepository;
+    private final UserRepository userRepository;
     private final SystemMonitor systemMonitor;
 
     @Transactional
@@ -34,6 +36,21 @@ public class HeartRateConsumer {
         long startTime = System.currentTimeMillis();
         // 가상 파티션 번호 (관리자 로그용)
         int virtualPartition = (int)(dto.userId() % 4);
+
+        if (!userRepository.existsById(dto.userId())) {
+            log.warn("[Kafka Skip] 존재하지 않는 유저 데이터입니다. userId: {}", dto.userId());
+
+            // 관리자 로그에는 '검증 실패(FAIL_VALIDATION)'로 기록하고 종료
+            systemMonitor.recordHeartRateLog(
+                    dto.userId(),
+                    dto.email(),
+                    virtualPartition,
+                    0,
+                    ProcessStatus.FAIL_VALIDATION,
+                    "존재하지 않는 유저 ID: " + dto.userId()
+            );
+            return; // 메서드 종료 (save 시도 안 함)
+        }
 
         try {
             // String 날짜 -> LocalDateTime으로 복구
