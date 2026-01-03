@@ -116,11 +116,11 @@ jobs:
 
             # Health Check
             HEALTH_SUCCESS=false
-            for i in {1..20}; do
+            for i in {1..50}; do
               if [ "$(curl -s http://127.0.0.1:$TARGET_PORT/health)" = "OK" ]; then
                 HEALTH_SUCCESS=true; break
               fi
-              echo "⏳ 대기 중... ($i/20)"; sleep 5
+              echo "⏳ 대기 중... ($i/50)"; sleep 5
             done
 
             if [ "$HEALTH_SUCCESS" = false ]; then
